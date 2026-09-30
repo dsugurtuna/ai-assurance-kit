@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="ai-assurance-kit {{ version }}">
+<title>{{ r.title }}: AI assurance card</title>
+<style>
+  :root {
+    --ink: #1b1b1b; --muted: #4a4a4a; --paper: #ffffff; --rule: #b1b4b6; --panel: #f3f2f1;
+    --high: #8e1b0e; --high-bg: #fbe9e7; --warning: #6b4e00; --warning-bg: #fff4d6;
+    --info: #1d4f91; --info-bg: #e8f0fa; --link: #1d4f91;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #f0f0f0; --muted: #c8c8c8; --paper: #151515; --rule: #555; --panel: #232323;
+      --high: #ffb4a8; --high-bg: #3a1712; --warning: #ffd978; --warning-bg: #332700;
+      --info: #a9c7f0; --info-bg: #14253b; --link: #a9c7f0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width: 60rem; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; line-height: 1.2; }
+  h2 { font-size: 1.1rem; margin: 1.25rem 0 .5rem; padding-bottom: .2rem;
+    border-bottom: 2px solid var(--rule); }
+  p { margin: .4rem 0; }
+  a { color: var(--link); }
+  .disclaimer { border-left: 4px solid var(--warning); background: var(--warning-bg);
+    padding: .5rem .75rem; margin: .5rem 0 .75rem; font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin: 0; padding: 0;
+    list-style: none; color: var(--muted); }
+  .meta strong { color: var(--ink); }
+  .summary { font-size: 1.05rem; }
+  dl.glance { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; margin: 0;
+    border-top: 1px solid var(--rule); }
+  dl.glance dt, dl.glance dd { margin: 0; padding: .3rem .5rem; border-bottom: 1px solid var(--rule); }
+  dl.glance dt { font-weight: 600; background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; margin: .25rem 0; }
+  caption { text-align: left; font-weight: 600; padding: .25rem 0; }
+  th, td { text-align: left; vertical-align: top; padding: .3rem .5rem;
+    border-bottom: 1px solid var(--rule); }
+  th { background: var(--panel); }
+  .sev { display: inline-block; min-width: 4.5rem; padding: 0 .4rem; border-radius: .25rem;
+    font-weight: 700; text-transform: uppercase; font-size: .8rem; border: 1px solid currentColor; }
+  .sev-high { color: var(--high); background: var(--high-bg); }
+  .sev-warning { color: var(--warning); background: var(--warning-bg); }
+  .sev-info { color: var(--info); background: var(--info-bg); }
+  .level { background: var(--panel); padding: .6rem .75rem; border-left: 4px solid var(--info); }
+  .level p.name { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  ul.tight { margin: .25rem 0; padding-left: 1.25rem; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+  footer { margin-top: 1.5rem; padding-top: .5rem; border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: .85rem; }
+  @page { size: A4; margin: 12mm; }
+  @media print {
+    body { font-size: 9.5pt; background: #fff; color: #000; }
+    main { max-width: none; padding: 0; }
+    h2 { break-after: avoid; }
+    tr, dl.glance dt, dl.glance dd { break-inside: avoid; }
+    footer a[href^="http"]::after { content: " (" attr(href) ")"; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>{{ r.title }}</h1>
+  <p class="disclaimer">{{ disclaimer }}</p>
+  <ul class="meta">
+    <li><strong>Status:</strong> {{ r.status.value | words }}</li>
+    <li><strong>Record:</strong> <code>{{ r.id }}</code> v{{ r.version }}</li>
+    <li><strong>Checked as at:</strong> <time datetime="{{ a.today.isoformat() }}">{{ a.today.isoformat() }}</time></li>
+    <li><strong>Next review:</strong> {% if r.review.next_review %}<time datetime="{{ r.review.next_review.isoformat() }}">{{ r.review.next_review.isoformat() }}</time>{% if a.review_overdue %} (overdue){% endif %}{% else %}not set{% endif %}</li>
+  </ul>
+  <p class="summary">{{ r.summary }}</p>
+</header>
+
+<section aria-labelledby="glance">
+  <h2 id="glance">At a glance</h2>
+  <dl class="glance">
+    <dt>Purpose</dt><dd>{{ r.purpose }}</dd>
+{% for label, value in people.items() %}
+    <dt>{{ label }}</dt><dd>{{ value }}</dd>
+{% endfor %}
+    <dt>System</dt><dd>{{ r.system.model_kind.value | words }}: {{ r.system.model }} from {{ r.system.provider }}, hosting {{ r.system.hosting.value | words }}{% if r.system.third_party_supplier %}, supplier {{ r.system.third_party_supplier }}{% endif %}</dd>
+    <dt>Data</dt><dd>{{ r.data.categories | join("; ") }}</dd>
+    <dt>Personal data</dt><dd>{{ r.data.personal_data | yesno }}{% if r.data.special_category_data %} (includes special category){% endif %} · DPIA: {{ r.data.dpia.status.value | words }} · retention: {{ r.data.retention or "not recorded" }}</dd>
+    <dt>Connectors</dt><dd>{% for c in r.access.connectors %}{{ c.name }} ({{ c.permissions | map(attribute="value") | join(", ") }}){% if not loop.last %}; {% endif %}{% else %}none{% endfor %}</dd>
+    <dt>Actions</dt><dd>{{ r.actions.mode.value | words }}: {{ r.actions.description }}</dd>
+    <dt>Human approval</dt><dd>{{ r.actions.human_approval_step or "not recorded" }}</dd>
+    <dt>Relied on by</dt><dd>{{ r.reliance.relied_on_by | join("; ") }} ({{ r.reliance.decision_role.value | words }})</dd>
+    <dt>Public</dt><dd>public-facing: {{ r.reliance.public_facing | yesno }} · public effect: {{ r.reliance.public_effect | yesno }} · significant influence: {{ r.reliance.significant_influence | yesno }}</dd>
+    <dt>ATRS determination</dt><dd>{{ r.transparency.atrs_determination.value | words }}{% if r.transparency.rationale %}: {{ r.transparency.rationale }}{% endif %}</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="level">
+  <h2 id="level">Proportionality level</h2>
+  <div class="level">
+    <p class="name">{{ a.level.level.label }}</p>
+    <p>{{ a.level.level.means }}</p>
+{% if a.level.reasons %}
+    <p>Why this level (policy: {{ a.level.policy_name }}):</p>
+    <ul class="tight">
+{% for reason in a.level.reasons %}
+      <li><strong>{{ reason.level.label }}</strong>: {{ reason.reason }} (<code>{{ reason.condition }}</code>)</li>
+{% endfor %}
+    </ul>
+{% else %}
+    <p>No trigger in the policy ({{ a.level.policy_name }}) raised the level above the default.</p>
+{% endif %}
+  </div>
+</section>
+
+<section aria-labelledby="prompts">
+  <h2 id="prompts">Prompts for human judgement</h2>
+{% if a.findings %}
+  <table>
+    <caption>{{ a.counts["high"] }} high, {{ a.counts["warning"] }} warning, {{ a.counts["info"] }} info. Prompts, not verdicts.</caption>
+    <thead><tr><th scope="col">Severity</th><th scope="col">Check</th><th scope="col">Prompt</th></tr></thead>
+    <tbody>
+{% for f in a.findings %}
+      <tr><td><span class="sev sev-{{ f.severity.value }}">{{ f.severity.value }}</span></td><td><code>{{ f.rule.id }}</code> {{ f.rule.title }}</td><td>{{ f.message }}</td></tr>
+{% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No checks fired. That means none of the kit's rules matched, not that the use is assured.</p>
+{% endif %}
+</section>
+
+<section aria-labelledby="risks">
+  <h2 id="risks">Risks</h2>
+{% if risk_rows %}
+  <table>
+    <caption>Scored likelihood x impact (1 to 5 each). Appetite: scores above {{ appetite }}.</caption>
+    <thead><tr><th scope="col">ID</th><th scope="col">Risk</th><th scope="col">L x I</th><th scope="col">Owner</th><th scope="col">Controls</th></tr></thead>
+    <tbody>
+{% for row in risk_rows %}
+      <tr><td>{{ row.risk.id }}</td><td>{{ row.risk.description }}</td><td>{{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} <strong>(above)</strong>{% endif %}</td><td>{{ row.risk.owner or "none" }}</td><td>{{ row.controls }}</td></tr>
+{% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No risks recorded.</p>
+{% endif %}
+</section>
+
+<section aria-labelledby="evidence">
+  <h2 id="evidence">Evidence and decisions</h2>
+  <ul class="tight">
+{% for item in timeline %}
+    <li><time datetime="{{ item.date }}">{{ item.date }}</time> · {{ item.label }}: {{ item.text }}</li>
+{% else %}
+    <li>No evaluation evidence or decisions recorded.</li>
+{% endfor %}
+  </ul>
+</section>
+
+<footer>
+{% if cited %}
+  <p>Sources behind the prompts above: {% for title, url in cited %}<a href="{{ url }}">{{ title }}</a>{% if not loop.last %}; {% endif %}{% endfor %}. The kit is informed by these sources; it does not implement or certify against them.</p>
+{% endif %}
+  <p>Generated from <code>{{ source }}</code> by ai-assurance-kit {{ version }}{% if redacted %} (names redacted){% endif %}. {{ disclaimer }}</p>
+</footer>
+</main>
+</body>
+</html>

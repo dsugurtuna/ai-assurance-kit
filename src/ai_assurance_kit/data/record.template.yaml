@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dsugurtuna/ai-assurance-kit/main/schema/ai-use-record.schema.json
+#
+# AI use record (ai-assurance-kit). Unofficial; not government guidance.
+#
+# One record describes one AI use case. Replace every REPLACE, then run:
+#   aiak check <this file>
+# If you do not know an answer, write "unknown": a visible gap is more useful than a guess.
+# Allowed values for each field are listed in schema/ai-use-record.schema.json (`aiak schema`).
+
+schema_version: "1.0"
+id: my-ai-use-case          # short, stable, lowercase slug
+title: REPLACE with a short name for the use case
+version: "1"
+status: proposed            # proposed | approved_to_build | in_test | live | retired
+organisation: REPLACE with your organisation (optional)
+
+summary: >-
+  REPLACE with two or three plain-English sentences: what the tool does and why it is used.
+purpose: >-
+  REPLACE with the problem this solves, for whom, and what happens today without it.
+benefits:
+  - REPLACE with an expected benefit, and how you will know it happened
+alternatives_considered: >-
+  REPLACE with the simpler or non-AI options you considered (better data, a form, ordinary
+  automation) and why they were not enough.
+
+accountability:
+  business_owner: {role: REPLACE with the accountable role, name: null}
+  builder: {role: REPLACE with the role that builds or configures it, name: null}
+  maintainer: null          # who looks after it once live
+  assurer: null             # who checks it; should not be the builder
+  approver: null
+
+system:
+  description: REPLACE with what the system is, in one sentence
+  model_kind: generative    # generative | predictive | rules_based | other
+  model: REPLACE with the model or product (a generic label is fine)
+  provider: REPLACE with who provides it, or "in-house"
+  platform: null
+  hosting: vendor_saas      # vendor_saas | organisation_cloud | on_premises | local_device | other
+  third_party_supplier: null
+
+data:
+  categories:
+    - REPLACE with a kind of data it uses
+  personal_data: false
+  special_category_data: false
+  sources: []
+  retention: null
+  dpia:
+    status: not_screened    # not_screened | screened_not_required | required_in_progress | completed
+    reference: null
+    decided_by: null
+    date: null
+
+access:
+  users: REPLACE with who can use the tool
+  connectors: []            # e.g. {name: Shared drive, permissions: [read]}
+
+actions:
+  mode: read_only           # read_only | drafts | writes_with_approval | autonomous
+  description: REPLACE with what the system does with its outputs
+  human_approval_step: null
+  recipients: []
+  stop_mechanism: null
+
+reliance:
+  relied_on_by:
+    - REPLACE with who relies on the outputs
+  how_outputs_are_used: REPLACE with how the outputs are used
+  decision_role: information_only   # information_only | decision_support | automated_decision
+  public_facing: false
+  public_effect: false
+  significant_influence: false
+  human_review: null
+  challenge_route: null
+  user_notice: null
+  scale: {users: null, uses_per_month: null}
+
+risks: []       # e.g. {id: R1, description: ..., likelihood: 3, impact: 4, owner: ..., controls: [C1]}
+controls: []    # e.g. {id: C1, description: ..., status: planned, owner: ...}
+evaluation: []  # e.g. {date: 2026-01-31, kind: human_review_sample, summary: ..., independent: true}
+decisions: []   # e.g. {type: approve_build, date: 2026-01-10, by: ..., note: ...}
+
+transparency:
+  atrs_determination: not_assessed  # not_assessed | in_scope | out_of_scope
+  rationale: null
+  record_url: null
+
+review:
+  last_reviewed: null
+  next_review: null

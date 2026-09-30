@@ -1,0 +1,81 @@
+# {{ r.title }}
+
+> **{{ disclaimer }}**
+
+**Status:** {{ r.status.value | words }} · **Record:** `{{ r.id }}` v{{ r.version }} · **Checked as at:** {{ a.today.isoformat() }} · **Next review:** {% if r.review.next_review %}{{ r.review.next_review.isoformat() }}{% if a.review_overdue %} (overdue){% endif %}{% else %}not set{% endif %}
+
+
+{{ r.summary | md }}
+
+## At a glance
+
+| | |
+|---|---|
+| Purpose | {{ r.purpose | md }} |
+{% for label, value in people.items() %}
+| {{ label }} | {{ value | md }} |
+{% endfor %}
+| System | {{ r.system.model_kind.value | words }}: {{ r.system.model | md }} from {{ r.system.provider | md }}, hosting {{ r.system.hosting.value | words }}{% if r.system.third_party_supplier %}, supplier {{ r.system.third_party_supplier | md }}{% endif %} |
+| Data | {{ r.data.categories | join("; ") | md }} |
+| Personal data | {{ r.data.personal_data | yesno }}{% if r.data.special_category_data %} (includes special category){% endif %} · DPIA: {{ r.data.dpia.status.value | words }} · retention: {{ (r.data.retention or "not recorded") | md }} |
+| Connectors | {% for c in r.access.connectors %}{{ c.name | md }} ({{ c.permissions | map(attribute="value") | join(", ") }}){% if not loop.last %}; {% endif %}{% else %}none{% endfor %} |
+| Actions | {{ r.actions.mode.value | words }}: {{ r.actions.description | md }} |
+| Human approval | {{ (r.actions.human_approval_step or "not recorded") | md }} |
+| Relied on by | {{ r.reliance.relied_on_by | join("; ") | md }} ({{ r.reliance.decision_role.value | words }}) |
+| Public | public-facing: {{ r.reliance.public_facing | yesno }} · public effect: {{ r.reliance.public_effect | yesno }} · significant influence: {{ r.reliance.significant_influence | yesno }} |
+| ATRS determination | {{ r.transparency.atrs_determination.value | words }}{% if r.transparency.rationale %}: {{ r.transparency.rationale | md }}{% endif %} |
+
+## Proportionality level: {{ a.level.level.label }}
+
+{{ a.level.level.means | md }}
+
+{% if a.level.reasons %}
+Why this level (policy: {{ a.level.policy_name }}):
+
+{% for reason in a.level.reasons %}
+- **{{ reason.level.label }}**: {{ reason.reason }} (`{{ reason.condition }}`)
+{% endfor %}
+{% else %}
+No trigger in the policy ({{ a.level.policy_name }}) raised the level above the default.
+{% endif %}
+
+## Prompts for human judgement ({{ a.counts["high"] }} high, {{ a.counts["warning"] }} warning, {{ a.counts["info"] }} info)
+
+{% if a.findings %}
+| Severity | Check | Prompt |
+|---|---|---|
+{% for f in a.findings %}
+| {{ f.severity.value }} | {{ f.rule.id }}: {{ f.rule.title | md }} | {{ f.message | md }} |
+{% endfor %}
+{% else %}
+No checks fired. That means none of the kit's rules matched, not that the use is assured.
+{% endif %}
+
+## Risks (appetite: scores above {{ appetite }})
+
+{% if risk_rows %}
+| ID | Risk | L x I | Owner | Controls |
+|---|---|---|---|---|
+{% for row in risk_rows %}
+| {{ row.risk.id }} | {{ row.risk.description | md }} | {{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} (above){% endif %} | {{ (row.risk.owner or "none") | md }} | {{ row.controls | md }} |
+{% endfor %}
+{% else %}
+No risks recorded.
+{% endif %}
+
+## Evidence and decisions
+
+{% for item in timeline %}
+- {{ item.date }} · {{ item.label }}: {{ item.text | md }}
+{% else %}
+- No evaluation evidence or decisions recorded.
+{% endfor %}
+
+---
+
+{% if cited %}
+Sources behind the prompts above: {% for title, url in cited %}[{{ title }}]({{ url }}){% if not loop.last %}; {% endif %}{% endfor %}.
+The kit is informed by these sources; it does not implement or certify against them.
+
+{% endif %}
+Generated from `{{ source }}` by ai-assurance-kit {{ version }}{% if redacted %} (names redacted){% endif %}. {{ disclaimer }}
