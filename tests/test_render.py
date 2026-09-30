@@ -13,13 +13,20 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
+import yaml
 
-from ai_assurance_kit.loader import load_record
-from ai_assurance_kit.policy import Policy
+from ai_assurance_kit.loader import load_record, parse_record
+from ai_assurance_kit.policy import Policy, example_policy_text, parse_policy
 from ai_assurance_kit.register import REGISTER_COLUMNS, render_register
 from ai_assurance_kit.render import assess, render_card
 from ai_assurance_kit.schema import AIUseRecord
-from tests.conftest import EXAMPLES, ROOT, TODAY
+from tests.conftest import (
+    EXAMPLES,
+    ROOT,
+    TODAY,
+    assert_markdown_contains_text_safely,
+    hostile_data,
+)
 
 Make = Callable[..., AIUseRecord]
 CARDS = EXAMPLES / "cards"
@@ -83,6 +90,50 @@ def test_redacted_card_hides_names_in_prompts(fmt: str, policy: Policy) -> None:
 def test_markdown_escapes_table_pipes(make_record: Make, policy: Policy) -> None:
     text = render_card(make_record({"purpose": "Either | or"}), policy, today=TODAY)
     assert "| Purpose | Either \\| or |" in text
+
+
+MARKER = "MARK"
+HOSTILE = f"a|b\n{MARKER}<script>alert(\"x\")</script> & 'q'"
+
+
+def _hostile_record() -> AIUseRecord:
+    data = hostile_data(HOSTILE)
+    data["risks"][0].update(likelihood=4, impact=4, owner=None)  # RISK-001 quotes the risk id
+    data["access"]["connectors"][0]["permissions"] = ["send"]  # ACT-003 quotes the connector
+    data["accountability"]["assurer"]["name"] = data["accountability"]["builder"]["name"]
+    return parse_record(data)
+
+
+def _hostile_policy() -> Policy:
+    data = yaml.safe_load(example_policy_text())
+    data["policy_name"] = HOSTILE
+    for level in data["levels"]:
+        level["label"] += HOSTILE
+        level["means"] += HOSTILE
+    for trigger in data["triggers"]:
+        trigger["reason"] += HOSTILE
+    return parse_policy(data)
+
+
+@pytest.mark.parametrize("hostile_policy", [False, True])
+def test_markdown_card_escapes_every_free_text_value(hostile_policy: bool, policy: Policy) -> None:
+    chosen = _hostile_policy() if hostile_policy else policy
+    text = render_card(_hostile_record(), chosen, today=TODAY)
+    assert_markdown_contains_text_safely(text, MARKER)
+
+
+def test_markdown_register_escapes_free_text(policy: Policy) -> None:
+    items = [("records/x.yaml", assess(_hostile_record(), _hostile_policy(), TODAY))]
+    assert_markdown_contains_text_safely(render_register(items, fmt="md", today=TODAY), MARKER)
+
+
+@pytest.mark.parametrize("hostile_policy", [False, True])
+def test_html_card_escapes_every_free_text_value(hostile_policy: bool, policy: Policy) -> None:
+    chosen = _hostile_policy() if hostile_policy else policy
+    html = render_card(_hostile_record(), chosen, fmt="html", today=TODAY)
+    assert "<script" not in html
+    assert 'alert("x")' not in html
+    assert "&lt;script&gt;alert(&#34;x&#34;)&lt;/script&gt; &amp; &#39;q&#39;" in html
 
 
 def test_card_with_no_findings_says_so(make_record: Make, policy: Policy) -> None:

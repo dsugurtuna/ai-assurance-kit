@@ -1,8 +1,8 @@
-# {{ r.title }}
+# {{ r.title | md }}
 
 > **{{ disclaimer }}**
 
-**Status:** {{ r.status.value | words }} · **Record:** `{{ r.id }}` v{{ r.version }} · **Checked as at:** {{ a.today.isoformat() }} · **Next review:** {% if r.review.next_review %}{{ r.review.next_review.isoformat() }}{% if a.review_overdue %} (overdue){% endif %}{% else %}not set{% endif %}
+**Status:** {{ r.status.value | words }} · **Record:** `{{ r.id }}` v{{ r.version | md }} · **Checked as at:** {{ a.today.isoformat() }} · **Next review:** {% if r.review.next_review %}{{ r.review.next_review.isoformat() }}{% if a.review_overdue %} (overdue){% endif %}{% else %}not set{% endif %}
 
 
 {{ r.summary | md }}
@@ -25,18 +25,18 @@
 | Public | public-facing: {{ r.reliance.public_facing | yesno }} · public effect: {{ r.reliance.public_effect | yesno }} · significant influence: {{ r.reliance.significant_influence | yesno }} |
 | ATRS determination | {{ r.transparency.atrs_determination.value | words }}{% if r.transparency.rationale %}: {{ r.transparency.rationale | md }}{% endif %} |
 
-## Proportionality level: {{ a.level.level.label }}
+## Proportionality level: {{ a.level.level.label | md }}
 
 {{ a.level.level.means | md }}
 
 {% if a.level.reasons %}
-Why this level (policy: {{ a.level.policy_name }}):
+Why this level (policy: {{ a.level.policy_name | md }}):
 
 {% for reason in a.level.reasons %}
-- **{{ reason.level.label }}**: {{ reason.reason }} (`{{ reason.condition }}`)
+- **{{ reason.level.label | md }}**: {{ reason.reason | md }} (`{{ reason.condition }}`)
 {% endfor %}
 {% else %}
-No trigger in the policy ({{ a.level.policy_name }}) raised the level above the default.
+No trigger in the policy ({{ a.level.policy_name | md }}) raised the level above the default.
 {% endif %}
 
 ## Prompts for human judgement ({{ a.counts["high"] }} high, {{ a.counts["warning"] }} warning, {{ a.counts["info"] }} info)
@@ -57,7 +57,7 @@ No checks fired. That means none of the kit's rules matched, not that the use is
 | ID | Risk | L x I | Owner | Controls |
 |---|---|---|---|---|
 {% for row in risk_rows %}
-| {{ row.risk.id }} | {{ row.risk.description | md }} | {{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} (above){% endif %} | {{ (row.risk.owner or "none") | md }} | {{ row.controls | md }} |
+| {{ row.risk.id | md }} | {{ row.risk.description | md }} | {{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} (above){% endif %} | {{ (row.risk.owner or "none") | md }} | {{ row.controls | md }} |
 {% endfor %}
 {% else %}
 No risks recorded.
@@ -78,4 +78,4 @@ Sources behind the prompts above: {% for title, url in cited %}[{{ title }}]({{ 
 The kit is informed by these sources; it does not implement or certify against them.
 
 {% endif %}
-Generated from `{{ source }}` by ai-assurance-kit {{ version }}{% if redacted %} (names redacted){% endif %}. {{ disclaimer }}
+Generated from {{ source | code }} by ai-assurance-kit {{ version }}{% if redacted %} (names redacted){% endif %}. {{ disclaimer }}

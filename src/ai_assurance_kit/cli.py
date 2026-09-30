@@ -25,7 +25,15 @@ from ai_assurance_kit.levels import FEATURES
 from ai_assurance_kit.loader import RecordError, find_record_files, load_record
 from ai_assurance_kit.policy import Policy, example_policy_text, load_policy
 from ai_assurance_kit.register import RegisterFormat, render_register
-from ai_assurance_kit.render import DISCLAIMER, Assessment, CardFormat, assess, render_card
+from ai_assurance_kit.render import (
+    DISCLAIMER,
+    Assessment,
+    CardFormat,
+    assess,
+    md_code,
+    md_text,
+    render_card,
+)
 from ai_assurance_kit.schema import json_schema
 
 EXIT_OK, EXIT_THRESHOLD, EXIT_INVALID = 0, 1, 2
@@ -174,16 +182,17 @@ def _diff_text(report: DiffReport) -> str:
 
 
 def _diff_markdown(report: DiffReport) -> str:
-    lines = [f"# Changes: `{report.old_label}` to `{report.new_label}`", "", f"> {DISCLAIMER}", ""]
+    old, new = md_code(report.old_label), md_code(report.new_label)
+    lines = [f"# Changes: {old} to {new}", "", f"> {DISCLAIMER}", ""]
     if report.material:
         lines += ["## Material changes (re-review suggested)", "", "| Change | Why it matters |"]
         lines += ["|---|---|"]
-        lines += [f"| {c.summary} | {c.reason} |" for c in report.material]
+        lines += [f"| {md_text(c.summary)} | {md_text(c.reason)} |" for c in report.material]
     else:
         lines += ["No material changes found by the kit's change rules."]
     if report.other:
         lines += ["", "## Other changes", ""]
-        lines += [f"- `{c.path}`: {c.describe()}" for c in report.other]
+        lines += [f"- {md_code(c.path)}: {md_text(c.describe())}" for c in report.other]
     return "\n".join(lines) + "\n"
 
 

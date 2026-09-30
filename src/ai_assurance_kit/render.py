@@ -22,10 +22,21 @@ DISCLAIMER = (
 )
 
 
-def _md_cell(value: object) -> str:
-    """Make a value safe inside a Markdown table cell."""
+def md_text(value: object) -> str:
+    """Make record or policy text safe inside Markdown: a table cell, list item or heading.
+
+    Newlines are collapsed (they would end the row, item or heading), pipes are escaped (they
+    would start a new table cell) and ``<`` is written as an entity, so text such as
+    ``<script>`` stays text in renderers that pass raw HTML through.
+    """
     text = "" if value is None else str(value)
-    return " ".join(text.split()).replace("|", "\\|")
+    return " ".join(text.split()).replace("|", "\\|").replace("<", "&lt;")
+
+
+def md_code(value: object) -> str:
+    """Show a value as a one-line Markdown code span; a backtick would end the span early."""
+    text = "" if value is None else str(value)
+    return "`" + " ".join(text.split()).replace("`", "'") + "`"
 
 
 def yes_no(value: bool) -> str:
@@ -47,7 +58,8 @@ def environment() -> Environment:
         lstrip_blocks=True,
         keep_trailing_newline=True,
     )
-    env.filters["md"] = _md_cell
+    env.filters["md"] = md_text
+    env.filters["code"] = md_code
     env.filters["yesno"] = yes_no
     env.filters["words"] = _words
     return env

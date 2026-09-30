@@ -6,9 +6,16 @@ import os
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ai_assurance_kit.cli import main
-from tests.conftest import EXAMPLES, ROOT
+from tests.conftest import (
+    CLEAN,
+    EXAMPLES,
+    ROOT,
+    assert_markdown_contains_text_safely,
+    hostile_data,
+)
 
 CHATBOT = str(EXAMPLES / "service-chatbot.yaml")
 NOTES = str(EXAMPLES / "meeting-notes-summariser.yaml")
@@ -164,6 +171,16 @@ def test_diff_outputs() -> None:
     code, out = run("diff", GRANT, GRANT, "--fail-on-material")
     assert code == 0
     assert "No material changes" in out
+
+
+def test_diff_markdown_escapes_record_text(tmp_path: Path) -> None:
+    old, new = tmp_path / "old.yaml", tmp_path / "new.yaml"
+    old.write_text(yaml.safe_dump(CLEAN), encoding="utf-8")
+    new.write_text(yaml.safe_dump(hostile_data("a|b\nMARK<script>x</script>")), encoding="utf-8")
+    code, out = run("diff", str(old), str(new), "--format", "md")
+    assert code == 0
+    assert "## Material changes" in out
+    assert_markdown_contains_text_safely(out, "MARK")
 
 
 def test_render_to_files(tmp_path: Path) -> None:

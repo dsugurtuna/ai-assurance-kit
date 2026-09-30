@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import datetime as dt
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -109,6 +110,89 @@ def set_path(data: dict[str, Any], path: str, value: Any) -> None:
 
 
 Mutation = dict[str, Any]
+
+# Keys whose values are enumerations, dates, numbers, flags or constrained slugs. Every other
+# string in a record is free text that a person typed and a renderer must treat as data.
+_NOT_FREE_TEXT = {
+    "schema_version",
+    "status",
+    "model_kind",
+    "hosting",
+    "permissions",
+    "mode",
+    "decision_role",
+    "kind",
+    "type",
+    "atrs_determination",
+    "date",
+    "last_reviewed",
+    "next_review",
+}
+
+
+def hostile_data(text: str) -> dict[str, Any]:
+    """CLEAN with every free-text string replaced by ``text`` plus a unique suffix.
+
+    Used to check that output formats escape what a record author typed. Optional text fields
+    that CLEAN leaves empty are filled too, and cross-references are kept valid.
+    """
+    data = copy.deepcopy(CLEAN)
+    # Optional text fields CLEAN leaves out; None here is replaced with text below.
+    for path in (
+        "organisation",
+        "system.platform",
+        "system.third_party_supplier",
+        "data.dpia.reference",
+        "actions.stop_mechanism",
+        "reliance.challenge_route",
+        "reliance.user_notice",
+        "transparency.record_url",
+    ):
+        set_path(data, path, None)
+    for person in data["accountability"].values():
+        person.update(name=None, team=None)
+    data["access"]["connectors"][0].update(system=None, purpose=None)
+    data["controls"][0]["owner"] = None
+    data["evaluation"][0].update(performed_by=None, link=None)
+    data["decisions"][0]["note"] = None
+    counter = iter(range(10_000))
+
+    def fill(node: Any, key: str = "", top: bool = False) -> Any:
+        if key in _NOT_FREE_TEXT or (top and key == "id"):
+            return node
+        if isinstance(node, dict):
+            return {k: fill(v, k, top=node is data) for k, v in node.items()}
+        if isinstance(node, list):
+            return [fill(v) for v in node]
+        if isinstance(node, str) or node is None:
+            return f"{text}{next(counter)}"  # unique, so every field can be told apart
+        return node  # numbers and flags
+
+    out: dict[str, Any] = fill(data)
+    out["risks"][0]["controls"] = [out["controls"][0]["id"]]
+    return out
+
+
+def assert_markdown_contains_text_safely(text: str, marker: str) -> None:
+    """Hostile record text (see hostile_data) must not break Markdown structure or inject HTML.
+
+    ``marker`` is the part of the hostile text that follows a newline: it must never start a
+    line, because that means a value broke out of its table row, list item or heading. Text
+    inside a code span is shown literally by Markdown renderers, so raw HTML is only an
+    injection outside code spans.
+    """
+    assert marker in text, "the hostile text should appear in the output"
+    header_cells: int | None = None
+    for line in text.splitlines():
+        assert not line.startswith(marker), f"a value broke onto its own line: {line!r}"
+        outside_code = re.sub(r"`[^`]*`", "", line)
+        assert "<script" not in outside_code.lower(), f"raw HTML in Markdown: {line!r}"
+        if line.startswith("|"):
+            cells = len(re.findall(r"(?<!\\)\|", line))
+            header_cells = header_cells if header_cells is not None else cells
+            assert cells == header_cells, f"table row has the wrong number of cells: {line!r}"
+        else:
+            header_cells = None
 
 
 @pytest.fixture
