@@ -60,7 +60,7 @@ def crosswalk_table() -> str:
     lines = [
         CROSSWALK_BEGIN,
         "",
-        "| Check | AI Playbook principle | ATRS section | NIST AI RMF | Other sources |",
+        "| Check | AI Playbook principle | ATRS guidance section | NIST AI RMF | Other sources |",
         "|---|---|---|---|---|",
     ]
     for r in all_rules():
