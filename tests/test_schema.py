@@ -129,6 +129,55 @@ def test_load_record_missing_file(tmp_path: Any) -> None:
         load_record(tmp_path / "missing.yaml")
 
 
+GRANT_TEXT = (EXAMPLES / "grant-triage.yaml").read_text(encoding="utf-8")
+
+
+def test_duplicate_keys_are_an_error_not_a_silent_overwrite(tmp_path: Any) -> None:
+    # YAML parsers usually keep the last value, so this record would quietly say that no
+    # personal data is involved. Like an unknown field, a repeated key must be an error.
+    text = GRANT_TEXT.replace("  personal_data: true\n", "  personal_data: true\n  retention: x\n")
+    text = text.replace("  special_category_data: false\n", "  personal_data: false\n", 1)
+    path = tmp_path / "dupe.yaml"
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(RecordError, match=r"line \d+.*duplicate key 'personal_data'") as exc:
+        load_record(path)
+    assert str(path) in str(exc.value)
+
+
+def test_invalid_date_is_a_record_error_with_its_location(tmp_path: Any) -> None:
+    path = tmp_path / "date.yaml"
+    path.write_text(GRANT_TEXT.replace("next_review: 2026-12-01", "next_review: 2026-13-01"))
+    with pytest.raises(RecordError, match=r"line \d+.*2026-13-01"):
+        load_record(path)
+
+
+def test_yaml_syntax_error_is_one_located_line(tmp_path: Any) -> None:
+    bad = tmp_path / "bad.yaml"
+    bad.write_text("id: [unclosed\n", encoding="utf-8")
+    with pytest.raises(RecordError) as exc:
+        load_record(bad)
+    (problem,) = exc.value.problems
+    assert "\n" not in str(problem)
+    assert "<unicode string>" not in str(problem)
+    assert "line 2, column 1" in str(problem)
+
+
+@pytest.mark.parametrize("encoding", ["utf-8-sig", "utf-16"])
+def test_windows_encodings_load(encoding: str, tmp_path: Any) -> None:
+    # Windows editors often add a byte-order mark, and Windows PowerShell 5 writes UTF-16 when
+    # output is redirected to a file (for example `aiak policy > my-policy.yaml`).
+    path = tmp_path / "record.yaml"
+    path.write_text(GRANT_TEXT, encoding=encoding)
+    assert load_record(path).id == "grant-application-triage"
+
+
+def test_text_that_is_not_utf8_is_a_record_error(tmp_path: Any) -> None:
+    path = tmp_path / "latin1.yaml"
+    path.write_text(GRANT_TEXT.replace("Grant application triage", "Grant café"), "latin-1")
+    with pytest.raises(RecordError, match="UTF-8"):
+        load_record(path)
+
+
 def test_find_record_files_is_not_recursive() -> None:
     found = find_record_files([EXAMPLES])
     assert [p.name for p in found] == [

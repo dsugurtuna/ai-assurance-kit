@@ -58,16 +58,79 @@ def problems_from(error: ValidationError) -> list[Problem]:
     return out
 
 
+class _StrictLoader(yaml.SafeLoader):
+    """PyYAML's safe loader, with two silent behaviours turned into errors.
+
+    * A repeated key: PyYAML keeps the last value, so ``personal_data: true`` followed later by
+      ``personal_data: false`` would quietly say "no personal data". Like an unknown field, it
+      is an error.
+    * An impossible date such as ``2026-13-01``: PyYAML raises a bare ValueError with no file
+      or line. It becomes a YAML error with its location.
+    """
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        seen: set[Any] = set()
+        for key_node, _ in node.value:
+            if key_node.tag == "tag:yaml.org,2002:merge":
+                continue  # "<<" merges may legitimately be overridden by explicit keys
+            key = self.construct_object(key_node, deep=deep)
+            try:
+                duplicate = key in seen
+            except TypeError:  # an unhashable key; the base class reports it
+                continue
+            if duplicate:
+                raise yaml.constructor.ConstructorError(
+                    None, None, f"found duplicate key {key!r}", key_node.start_mark
+                )
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+    def construct_yaml_timestamp(self, node: yaml.ScalarNode) -> Any:
+        try:
+            return super().construct_yaml_timestamp(node)
+        except ValueError as exc:
+            raise yaml.constructor.ConstructorError(
+                None, None, f"{node.value!r} is not a valid date ({exc})", node.start_mark
+            ) from exc
+
+
+_StrictLoader.add_constructor("tag:yaml.org,2002:timestamp", _StrictLoader.construct_yaml_timestamp)
+
+
+def _yaml_problem(exc: yaml.YAMLError) -> str:
+    """One readable line: what is wrong and where, without PyYAML's '<byte string>' excerpt."""
+    if isinstance(exc, yaml.reader.ReaderError):
+        return (
+            "not readable as UTF-8 or UTF-16 text "
+            f"({exc.reason} at byte {exc.position}); save the file as UTF-8"
+        )
+    if isinstance(exc, yaml.MarkedYAMLError) and exc.problem_mark is not None:
+        mark = exc.problem_mark
+        detail = "; ".join(x for x in (exc.problem, exc.context) if x)
+        return f"not valid YAML at line {mark.line + 1}, column {mark.column + 1}: {detail}"
+    return "not valid YAML: " + " ".join(str(exc).split())
+
+
+def read_yaml(path: Path, kind: str = "AI use record") -> Any:
+    """Parse a YAML or JSON file, reporting any problem as a RecordError naming the file.
+
+    The file is read as bytes so the parser can detect UTF-8 (with or without a byte-order
+    mark) and UTF-16 with a byte-order mark, which Windows tools often write.
+    """
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise RecordError(path, [Problem("", f"cannot read file ({exc.strerror})")], kind) from exc
+    try:
+        # JSON is a subset of YAML 1.2 for our purposes.
+        return yaml.load(raw, Loader=_StrictLoader)  # a SafeLoader subclass: no arbitrary objects
+    except yaml.YAMLError as exc:
+        raise RecordError(path, [Problem("", _yaml_problem(exc))], kind) from exc
+
+
 def read_mapping(path: Path) -> dict[str, Any]:
     """Read a YAML or JSON file that must contain a mapping at the top level."""
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise RecordError(path, [Problem("", f"cannot read file ({exc.strerror})")]) from exc
-    try:
-        data = yaml.safe_load(text)  # JSON is a subset of YAML 1.2 for our purposes
-    except yaml.YAMLError as exc:
-        raise RecordError(path, [Problem("", f"not valid YAML: {exc}")]) from exc
+    data = read_yaml(path)
     if not isinstance(data, dict):
         raise RecordError(path, [Problem("", "the file must contain a mapping of fields")])
     return data

@@ -13,7 +13,7 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from ai_assurance_kit.loader import Problem, RecordError, problems_from
+from ai_assurance_kit.loader import Problem, RecordError, problems_from, read_yaml
 
 EXAMPLE_POLICY_RESOURCE = "policy.example.yaml"
 
@@ -148,12 +148,7 @@ def load_policy(path: str | Path | None = None) -> Policy:
         data = yaml.safe_load(example_policy_text())
         return parse_policy(data, Path(EXAMPLE_POLICY_RESOURCE))
     p = Path(path)
-    try:
-        data = yaml.safe_load(p.read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise RecordError(p, [Problem("", f"cannot read file ({exc.strerror})")], "policy") from exc
-    except yaml.YAMLError as exc:
-        raise RecordError(p, [Problem("", f"not valid YAML: {exc}")], "policy") from exc
+    data = read_yaml(p, "policy")
     if not isinstance(data, dict):
         raise RecordError(p, [Problem("", "the policy file must contain a mapping")], "policy")
     return parse_policy(data, p)

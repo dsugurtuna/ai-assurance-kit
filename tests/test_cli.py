@@ -77,6 +77,32 @@ def test_validate(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert "title: Field required" in capsys.readouterr().err
 
 
+def test_validate_names_each_unreadable_file_and_carries_on(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    text = Path(GRANT).read_text(encoding="utf-8")
+    bad_date = tmp_path / "a-bad-date.yaml"
+    bad_date.write_text(text.replace("next_review: 2026-12-01", "next_review: 2026-13-01"))
+    latin1 = tmp_path / "b-latin1.yaml"
+    latin1.write_text(text.replace("Grant application", "Grant café"), encoding="latin-1")
+    code, out = run("validate", str(bad_date), str(latin1), GRANT)
+    assert code == 2
+    assert "grant-triage.yaml: valid" in out  # the good file is still validated
+    err = capsys.readouterr().err
+    assert str(bad_date) in err
+    assert str(latin1) in err
+
+
+def test_policy_saved_by_windows_powershell_loads(tmp_path: Path) -> None:
+    # Windows PowerShell 5 writes UTF-16 when output is redirected: aiak policy > policy.yaml
+    _, text = run("policy")
+    saved = tmp_path / "policy.yaml"
+    saved.write_text(text, encoding="utf-16")
+    code, out = run("policy", "--validate", str(saved))
+    assert code == 0
+    assert "valid policy" in out
+
+
 def test_check_text_output() -> None:
     code, out = run("check", CHATBOT, *DAY)
     assert code == 0
