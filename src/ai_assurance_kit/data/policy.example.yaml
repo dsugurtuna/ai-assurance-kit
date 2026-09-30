@@ -1,0 +1,89 @@
+# EXAMPLE POLICY. Adapt it before you rely on it.
+#
+# This file sets three things an organisation must decide for itself:
+#   1. risk appetite: which risk scores need an owner and a treatment plan;
+#   2. proportionality levels: how much review a use case gets, and which record
+#      features raise the level;
+#   3. change thresholds: what counts as a material change that should trigger re-review.
+#
+# The values below are illustrative. They are not taken from any organisation and are not
+# government guidance. Print this file with `aiak policy`, save it, edit it, and pass it with
+# `--policy my-policy.yaml`.
+
+policy_name: "Example policy (adapt before use)"
+
+risk:
+  # Risks are scored likelihood x impact, each 1-5, so scores run 1-25.
+  # Anything scoring above this number is "above appetite".
+  appetite_score: 9
+
+# Levels run from lightest to heaviest. The first level is the default when no trigger fires.
+levels:
+  - id: standard
+    label: Standard
+    means: >-
+      The team completes this record, the business owner agrees it, and it is reviewed on the
+      normal cycle.
+  - id: use_specific
+    label: Use-specific review
+    means: >-
+      A reviewer outside the build team checks this use case before it goes live, with input
+      from data protection, security or accessibility specialists as the reasons suggest.
+  - id: senior_specialist
+    label: Senior or specialist approval
+    means: >-
+      A senior accountable owner approves the use after specialist review, and the approval is
+      recorded as a separate go-live decision.
+
+# Each trigger raises the level to at least `level` when a record feature meets the condition.
+# Conditions: `equals: <value>`, `in: [<values>]` or `gte: <number>`.
+# Run `aiak policy --features` to list the features you can use.
+triggers:
+  - feature: personal_data
+    equals: true
+    level: use_specific
+    reason: Personal data is processed.
+  - feature: public_facing
+    equals: true
+    level: use_specific
+    reason: Members of the public interact with the system directly.
+  - feature: sends_or_writes
+    equals: true
+    level: use_specific
+    reason: The system sends or writes on its own, not only drafts for a person.
+  - feature: decision_role
+    equals: decision_support
+    level: use_specific
+    reason: Outputs support decisions, so errors can shape outcomes.
+  - feature: uses_per_month
+    gte: 10000
+    level: use_specific
+    reason: Used at a scale where small error rates affect many cases.
+  - feature: special_category_data
+    equals: true
+    level: senior_specialist
+    reason: Special category personal data is processed.
+  - feature: significant_public_effect
+    equals: true
+    level: senior_specialist
+    reason: Outputs significantly influence decisions that affect the public or organisations.
+  - feature: decision_role
+    equals: automated_decision
+    level: senior_specialist
+    reason: The output is the decision, or is applied without meaningful human review.
+  - feature: action_mode
+    equals: autonomous
+    level: senior_specialist
+    reason: The system sends or writes without a person approving each action.
+  - feature: max_risk_score
+    gte: 16
+    level: senior_specialist
+    reason: At least one risk is scored 16 or more before controls.
+
+changes:
+  # A rise in users or monthly uses by at least this factor counts as a material change.
+  scale_factor: 2.0
+
+# Rule IDs to switch off, for example if your organisation is outside the scope of a
+# UK-specific prompt. Prefer recording a determination over disabling a rule.
+disabled_rules: []
