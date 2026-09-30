@@ -101,7 +101,9 @@ class Policy(_Model):
 
     @model_validator(mode="after")
     def _consistent(self) -> Policy:
-        from ai_assurance_kit.levels import FEATURES  # local import avoids a cycle
+        # Local imports avoid a cycle: levels and the rules both import this module.
+        from ai_assurance_kit.checks.rules import REGISTRY
+        from ai_assurance_kit.levels import FEATURES
 
         ids = [lv.id for lv in self.levels]
         problems: list[str] = []
@@ -115,6 +117,11 @@ class Policy(_Model):
                 problems.append(
                     f"triggers[{i}] uses unknown feature '{trig.feature}' (known: {known})"
                 )
+            elif problem := FEATURES[trig.feature].problem_with(trig):
+                problems.append(f"triggers[{i}]: {problem}")
+        # Checked here as well as when the checks run, so `aiak policy --validate` catches it.
+        if unknown := sorted(set(self.disabled_rules) - {r.id for r in REGISTRY}):
+            problems.append(f"disabled_rules names unknown rule ids: {', '.join(unknown)}")
         if problems:
             raise ValueError("; ".join(problems))
         return self

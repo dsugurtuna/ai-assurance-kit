@@ -320,6 +320,25 @@ def test_policy_command(tmp_path: Path) -> None:
     assert "valid policy" in out
 
 
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("    equals: autonomous", "    equals: autonomus"),  # trigger that could never fire
+        ("disabled_rules: []", "disabled_rules: [AIAK-TRANS-01]"),  # rule id that does not exist
+    ],
+)
+def test_policy_validate_catches_mistakes_check_would_hit(
+    old: str, new: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _, text = run("policy")
+    assert old in text
+    custom = tmp_path / "p.yaml"
+    custom.write_text(text.replace(old, new), encoding="utf-8")
+    code, _ = run("policy", "--validate", str(custom))
+    assert code == 2
+    assert "not a valid policy" in capsys.readouterr().err
+
+
 def test_cli_runs_as_module_entry_point() -> None:
     # The console script is declared in pyproject.toml; check the target exists and is callable.
     from ai_assurance_kit import cli

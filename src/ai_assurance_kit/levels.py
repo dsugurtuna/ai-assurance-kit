@@ -15,10 +15,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from ai_assurance_kit.policy import Level, Policy
+from ai_assurance_kit.policy import Level, Policy, Trigger
 from ai_assurance_kit.schema import (
     ActionMode,
     AIUseRecord,
+    DecisionRole,
     Permission,
 )
 
@@ -30,6 +31,36 @@ class Feature:
     name: str
     description: str
     compute: Callable[[AIUseRecord, Policy], FeatureValue]
+    kind: type[bool] | type[int] | type[str] = bool
+    values: tuple[str, ...] = ()  # the possible values of a text feature
+
+    def _kind_text(self) -> str:
+        if self.kind is bool:
+            return "true or false"
+        if self.kind is int:
+            return "a whole number"
+        return "one of: " + ", ".join(self.values)
+
+    def problem_with(self, trigger: Trigger) -> str | None:
+        """Why a trigger on this feature could never fire, or None if it can.
+
+        A trigger that can never fire (a misspelt value, or a number compared with a flag)
+        would leave the level lower than the policy's author intended, without a word.
+        """
+        what = f"{self.name} is {self._kind_text()}"
+        if trigger.at_least is not None and self.kind is not int:
+            return f"gte needs a number feature, but {what}"
+        if trigger.one_of is not None:
+            if self.kind is not str:
+                return f"in needs a text feature, but {what}"
+            if unknown := [v for v in trigger.one_of if v not in self.values]:
+                return f"{what}, so {', '.join(map(repr, unknown))} can never match"
+        if trigger.equals is not None and (
+            type(trigger.equals) is not self.kind
+            or (self.kind is str and trigger.equals not in self.values)
+        ):
+            return f"{what}, so {trigger.equals!r} can never match"
+        return None
 
 
 def _max_risk(record: AIUseRecord, _policy: Policy) -> int:
@@ -73,11 +104,15 @@ _FEATURE_LIST: tuple[Feature, ...] = (
         "decision_role",
         "information_only, decision_support or automated_decision.",
         lambda r, _: r.reliance.decision_role.value,
+        kind=str,
+        values=tuple(v.value for v in DecisionRole),
     ),
     Feature(
         "action_mode",
         "read_only, drafts, writes_with_approval or autonomous.",
         lambda r, _: r.actions.mode.value,
+        kind=str,
+        values=tuple(v.value for v in ActionMode),
     ),
     Feature(
         "sends_or_writes",
@@ -88,23 +123,34 @@ _FEATURE_LIST: tuple[Feature, ...] = (
         "write_connectors",
         "Number of connectors with write, send, delete or admin permission.",
         _write_connectors,
+        kind=int,
     ),
     Feature(
         "third_party_supplier",
         "A third party supplies the tool or model.",
-        lambda r, _: r.system.third_party_supplier is not None,
+        # A blank answer is no answer, as in the checks and the card.
+        lambda r, _: bool(r.system.third_party_supplier),
     ),
-    Feature("max_risk_score", "Highest likelihood x impact score (0 if no risks).", _max_risk),
+    Feature(
+        "max_risk_score",
+        "Highest likelihood x impact score (0 if no risks).",
+        _max_risk,
+        kind=int,
+    ),
     Feature(
         "risks_above_appetite",
         "Number of risks scoring above the policy appetite.",
         _risks_above_appetite,
+        kind=int,
     ),
-    Feature("users", "Number of users, if recorded.", lambda r, _: r.reliance.scale.users),
+    Feature(
+        "users", "Number of users, if recorded.", lambda r, _: r.reliance.scale.users, kind=int
+    ),
     Feature(
         "uses_per_month",
         "Uses per month, if recorded.",
         lambda r, _: r.reliance.scale.uses_per_month,
+        kind=int,
     ),
 )
 

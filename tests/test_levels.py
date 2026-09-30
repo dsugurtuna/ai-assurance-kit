@@ -139,6 +139,56 @@ def test_policy_validation(trigger: dict[str, Any], message: str) -> None:
         parse_policy(data)
 
 
+@pytest.mark.parametrize(
+    ("condition", "message"),
+    [
+        # A typo in a value: the trigger would never fire and the level would be too low.
+        ({"feature": "action_mode", "equals": "autonomus"}, "'autonomus' can never match"),
+        ({"feature": "decision_role", "in": ["automated"]}, "'automated' can never match"),
+        # A condition of the wrong type for the feature.
+        ({"feature": "personal_data", "gte": 1}, "gte needs a number feature"),
+        ({"feature": "uses_per_month", "equals": "10000"}, "can never match"),
+        ({"feature": "users", "equals": True}, "can never match"),
+        ({"feature": "public_facing", "in": ["true"]}, "in needs a text feature"),
+    ],
+)
+def test_policy_rejects_triggers_that_can_never_fire(
+    condition: dict[str, Any], message: str
+) -> None:
+    data = _policy_data()
+    data["triggers"] = [{**condition, "level": "standard", "reason": "r"}]
+    with pytest.raises(RecordError, match=message):
+        parse_policy(data)
+
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        {"feature": "write_connectors", "equals": 0},
+        {"feature": "personal_data", "equals": False},
+        {"feature": "action_mode", "in": ["drafts", "autonomous"]},
+        {"feature": "max_risk_score", "gte": 12},
+    ],
+)
+def test_policy_accepts_well_typed_triggers(condition: dict[str, Any]) -> None:
+    data = _policy_data()
+    data["triggers"] = [{**condition, "level": "standard", "reason": "r"}]
+    assert parse_policy(data).triggers
+
+
+def test_policy_rejects_unknown_disabled_rules() -> None:
+    # Checked when the policy is loaded, so `aiak policy --validate` catches it too.
+    data = _policy_data()
+    data["disabled_rules"] = ["AIAK-TRANS-01"]
+    with pytest.raises(RecordError, match="unknown rule ids: AIAK-TRANS-01"):
+        parse_policy(data)
+
+
+def test_blank_supplier_is_no_supplier(make_record: Make, policy: Policy) -> None:
+    features = record_features(make_record({"system.third_party_supplier": "  "}), policy)
+    assert features["third_party_supplier"] is False
+
+
 def test_policy_rejects_duplicate_levels() -> None:
     data = _policy_data()
     data["levels"].append(dict(data["levels"][0]))
