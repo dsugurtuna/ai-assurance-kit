@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import glob
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -151,7 +152,11 @@ def load_record(path: str | Path) -> AIUseRecord:
 
 
 def find_record_files(paths: list[str | Path]) -> list[Path]:
-    """Expand files and directories (non-recursive) into a sorted list of record files."""
+    """Expand files, directories (non-recursive) and wildcards into a list of record files.
+
+    Wildcards such as ``records/*.yaml`` are expanded here because Windows shells pass them to
+    the program unexpanded. A pattern or directory that matches nothing adds nothing.
+    """
     found: list[Path] = []
     for raw in paths:
         p = Path(raw)
@@ -161,6 +166,13 @@ def find_record_files(paths: list[str | Path]) -> list[Path]:
                     c for c in p.iterdir() if c.is_file() and c.suffix.lower() in RECORD_SUFFIXES
                 )
             )
+        elif is_wildcard(raw):
+            found.extend(sorted(m for m in map(Path, glob.glob(str(raw))) if m.is_file()))
         else:
             found.append(p)
     return found
+
+
+def is_wildcard(raw: str | Path) -> bool:
+    """True for a path that does not exist and contains glob characters, such as *.yaml."""
+    return not Path(raw).exists() and any(ch in str(raw) for ch in "*?[")

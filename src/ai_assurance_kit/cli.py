@@ -22,7 +22,13 @@ from ai_assurance_kit.checks.engine import Severity
 from ai_assurance_kit.diff import DiffReport, diff_records
 from ai_assurance_kit.docs import crosswalk_table, rules_markdown
 from ai_assurance_kit.levels import FEATURES
-from ai_assurance_kit.loader import RECORD_SUFFIXES, RecordError, find_record_files, load_record
+from ai_assurance_kit.loader import (
+    RECORD_SUFFIXES,
+    RecordError,
+    find_record_files,
+    is_wildcard,
+    load_record,
+)
 from ai_assurance_kit.policy import Policy, example_policy_text, load_policy
 from ai_assurance_kit.register import RegisterFormat, render_register
 from ai_assurance_kit.render import (
@@ -85,8 +91,11 @@ def _record_files(paths: Sequence[str]) -> tuple[list[Path], bool]:
     for raw in paths:
         found = find_record_files([raw])
         if not found:
-            suffixes = ", ".join(RECORD_SUFFIXES)
-            print(f"{raw}: no record files ({suffixes}) in this directory", file=sys.stderr)
+            if is_wildcard(raw):
+                print(f"{raw}: no files match this pattern", file=sys.stderr)
+            else:
+                suffixes = ", ".join(RECORD_SUFFIXES)
+                print(f"{raw}: no record files ({suffixes}) in this directory", file=sys.stderr)
             ok = False
         files.extend(found)
     return files, ok
@@ -349,11 +358,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_init)
 
     p = sub.add_parser("validate", help="check files against the record schema only")
-    p.add_argument("files", nargs="+", help="record files or directories")
+    p.add_argument("files", nargs="+", help="record files, directories or wildcards")
     p.set_defaults(func=cmd_validate)
 
     p = sub.add_parser("check", help="validate, assess the level and run the checks")
-    p.add_argument("files", nargs="+", help="record files or directories")
+    p.add_argument("files", nargs="+", help="record files, directories or wildcards")
     policy_opt(p)
     today_opt(p)
     p.add_argument("--format", choices=["text", "json"], default="text")
@@ -385,7 +394,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_render)
 
     p = sub.add_parser("register", help="build a portfolio register from many records")
-    p.add_argument("paths", nargs="+", help="record files or directories (not recursive)")
+    p.add_argument(
+        "paths", nargs="+", help="record files, directories (not recursive) or wildcards"
+    )
     p.add_argument("--format", choices=["md", "csv"], help="default: from -o extension, else md")
     p.add_argument("-o", "--output")
     policy_opt(p)

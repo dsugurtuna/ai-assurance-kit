@@ -263,6 +263,17 @@ def test_directory_scan_ignores_suffix_case(tmp_path: Path) -> None:
     assert "GRANT.YAML: valid" in out
 
 
+def test_unexpanded_wildcards_are_expanded(capsys: pytest.CaptureFixture[str]) -> None:
+    # cmd.exe and PowerShell pass `records\*.yaml` to the program unexpanded; POSIX shells do
+    # the same when the pattern is quoted.
+    code, out = run("validate", str(EXAMPLES / "*.yaml"))
+    assert code == 0
+    assert out.count(": valid") == 3
+    code, _ = run("validate", str(EXAMPLES / "*.nothing"))
+    assert code == 2
+    assert "no files match" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize(
     "argv",
     [
