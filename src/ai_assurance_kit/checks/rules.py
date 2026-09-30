@@ -461,8 +461,8 @@ def review_overdue(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     if due is not None and due < ctx.today:
         days = (ctx.today - due).days
         yield Hit(
-            f"The next review was due on {due.isoformat()} ({days} days before "
-            f"{ctx.today.isoformat()}). Review the record, or set a new date and say why.",
+            f"The next review was due on {due.isoformat()} ({days} day{'' if days == 1 else 's'} "
+            f"before {ctx.today.isoformat()}). Review the record, or set a new date and say why.",
             ("review.next_review",),
         )
 
@@ -533,9 +533,11 @@ def risk_without_control(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit
 @rule(
     "AIAK-RISK-003",
     "No risks recorded",
-    Severity.info,
+    Severity.warning,
     """An empty risk list usually means the risks have not been assessed yet, not that there
-    are none.""",
+    are none. It is a warning, like a missing assurer or review date, so that a record with no
+    risks recorded cannot pass a `--fail-on warning` gate that the same record with an honestly
+    recorded, untreated risk would fail.""",
     refs=[atrs("Risks, Mitigations and Impact Assessments (Tier 2)"), nist("MAP 5.1")],
 )
 def no_risks(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:

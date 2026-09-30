@@ -35,7 +35,7 @@ requires what the check looks for. Unofficial; not government guidance.
 | [AIAK-REV-002](#aiak-rev-002) | warning | No next review date |
 | [AIAK-RISK-001](#aiak-risk-001) | high | Risk above appetite with no owner |
 | [AIAK-RISK-002](#aiak-risk-002) | warning | Risk above appetite with no control in place |
-| [AIAK-RISK-003](#aiak-risk-003) | info | No risks recorded |
+| [AIAK-RISK-003](#aiak-risk-003) | warning | No risks recorded |
 | [AIAK-PURP-001](#aiak-purp-001) | info | No alternatives recorded |
 | [AIAK-DEC-001](#aiak-dec-001) | high | Automated decisions with public effect and no challenge route |
 | [AIAK-DEC-002](#aiak-dec-002) | warning | Decision support with no human review described |
@@ -282,9 +282,9 @@ Sources:
 
 ## AIAK-RISK-003
 
-**No risks recorded** (severity: info; skipped when status is: retired)
+**No risks recorded** (severity: warning; skipped when status is: retired)
 
-Why: An empty risk list usually means the risks have not been assessed yet, not that there are none.
+Why: An empty risk list usually means the risks have not been assessed yet, not that there are none. It is a warning, like a missing assurer or review date, so that a record with no risks recorded cannot pass a `--fail-on warning` gate that the same record with an honestly recorded, untreated risk would fail.
 
 Sources:
 

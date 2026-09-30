@@ -270,6 +270,31 @@ def test_life_001_names_the_missing_decision(make_record: Make, fired: Fired) ->
     assert "approve_build or go_live" in finding.message
 
 
+def test_review_overdue_by_one_day_reads_correctly(make_record: Make, fired: Fired) -> None:
+    record = make_record({"review.next_review": "2026-09-29"})
+    finding = next(f for f in fired(record) if f.rule.id == "AIAK-REV-001")
+    assert "(1 day before 2026-09-30)" in finding.message
+
+
+def test_deleting_risks_does_not_lower_the_severity_below_warning(
+    make_record: Make, fired: Fired
+) -> None:
+    # An above-appetite risk with only a planned control is a warning. Removing the risk list
+    # altogether (so the risks are not assessed at all) must not make the record look better
+    # to a `--fail-on warning` gate. The parallel "nothing recorded yet" checks for the same
+    # lifecycle stages, AIAK-ROLE-002 (no assurer) and AIAK-REV-002 (no review date), are
+    # warnings too.
+    honest = make_record(
+        {
+            "risks": [{**CLEAN["risks"][0], "likelihood": 4, "impact": 3}],
+            "controls": [{**CLEAN["controls"][0], "status": "planned"}],
+        }
+    )
+    assert meets_threshold(fired(honest), Severity.warning)
+    silent = make_record({"risks": [], "controls": []})
+    assert meets_threshold(fired(silent), Severity.warning)
+
+
 # --------------------------------------------------------------------------- engine
 
 
