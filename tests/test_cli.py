@@ -237,6 +237,60 @@ def test_register_warns_on_duplicate_ids(capsys: pytest.CaptureFixture[str]) -> 
     assert "appears more than once" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["check", "--fail-on", "high"],  # a CI gate must not pass because nothing was checked
+        ["validate"],
+        ["register"],
+    ],
+)
+def test_directory_with_no_records_is_an_error(
+    argv: list[str], tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "notes.txt").write_text("not a record", encoding="utf-8")
+    command, *options = argv
+    code, _ = run(command, str(tmp_path), *options)
+    assert code == 2
+    assert "no record files" in capsys.readouterr().err
+
+
+def test_directory_scan_ignores_suffix_case(tmp_path: Path) -> None:
+    # Windows file names are case-insensitive, and RECORD.YAML is a common spelling there.
+    (tmp_path / "GRANT.YAML").write_text(Path(GRANT).read_text("utf-8"), encoding="utf-8")
+    code, out = run("validate", str(tmp_path))
+    assert code == 0
+    assert "GRANT.YAML: valid" in out
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["render", CHATBOT, "-o", "{missing}/card.html"],
+        ["register", str(EXAMPLES), "-o", "{missing}/register.csv"],
+        ["schema", "-o", "{missing}/schema.json"],
+        ["init", "{missing}/record.yaml"],
+    ],
+)
+def test_unwritable_output_is_a_usage_error_not_a_crash(
+    argv: list[str], tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # An unhandled exception exits 1, which the CLI reserves for "a --fail-on threshold was met".
+    missing = tmp_path / "no" / "such" / "dir"
+    code, _ = run(*(a.replace("{missing}", str(missing)) for a in argv))
+    assert code == 2
+    assert "cannot write" in capsys.readouterr().err
+
+
+def test_output_format_from_extension_ignores_case(tmp_path: Path) -> None:
+    card = tmp_path / "CARD.HTML"
+    run("render", CHATBOT, *DAY, "-o", str(card))
+    assert card.read_text(encoding="utf-8").startswith("<!doctype html>")
+    register = tmp_path / "REGISTER.CSV"
+    run("register", str(EXAMPLES), *DAY, "-o", str(register))
+    assert register.read_text(encoding="utf-8").startswith("id,title,status")
+
+
 def test_schema_command(tmp_path: Path) -> None:
     code, out = run("schema")
     assert code == 0

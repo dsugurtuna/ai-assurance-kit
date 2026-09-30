@@ -157,7 +157,9 @@ def find_record_files(paths: list[str | Path]) -> list[Path]:
         p = Path(raw)
         if p.is_dir():
             found.extend(
-                sorted(c for c in p.iterdir() if c.is_file() and c.suffix in RECORD_SUFFIXES)
+                sorted(
+                    c for c in p.iterdir() if c.is_file() and c.suffix.lower() in RECORD_SUFFIXES
+                )
             )
         else:
             found.append(p)

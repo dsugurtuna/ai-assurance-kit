@@ -22,7 +22,7 @@ from ai_assurance_kit.checks.engine import Severity
 from ai_assurance_kit.diff import DiffReport, diff_records
 from ai_assurance_kit.docs import crosswalk_table, rules_markdown
 from ai_assurance_kit.levels import FEATURES
-from ai_assurance_kit.loader import RecordError, find_record_files, load_record
+from ai_assurance_kit.loader import RECORD_SUFFIXES, RecordError, find_record_files, load_record
 from ai_assurance_kit.policy import Policy, example_policy_text, load_policy
 from ai_assurance_kit.register import RegisterFormat, render_register
 from ai_assurance_kit.render import (
@@ -47,12 +47,49 @@ def _date(value: str) -> dt.date:
         raise argparse.ArgumentTypeError(f"not an ISO date (YYYY-MM-DD): {value}") from exc
 
 
-def _emit(text: str, output: str | None, stdout: TextIO) -> None:
+def _write(path: Path, text: str) -> bool:
+    """Write a file, reporting failure as a usage problem rather than a traceback.
+
+    An unhandled exception would exit 1, which this CLI reserves for a met --fail-on threshold.
+    """
+    try:
+        path.write_text(text, encoding="utf-8")
+    except OSError as exc:
+        print(f"error: cannot write {path} ({exc.strerror})", file=sys.stderr)
+        return False
+    return True
+
+
+def _emit(text: str, output: str | None, stdout: TextIO) -> int:
     if output:
-        Path(output).write_text(text, encoding="utf-8")
+        if not _write(Path(output), text):
+            return EXIT_INVALID
         print(f"wrote {output}", file=sys.stderr)
     else:
         stdout.write(text if text.endswith("\n") else text + "\n")
+    return EXIT_OK
+
+
+def _has_suffix(output: str | None, *suffixes: str) -> bool:
+    return bool(output) and Path(str(output)).suffix.lower() in suffixes
+
+
+def _record_files(paths: Sequence[str]) -> tuple[list[Path], bool]:
+    """Expand files and directories. A directory with no record files is an input error.
+
+    Otherwise a mistyped or empty directory would be "checked" with nothing in it, and a CI
+    gate such as `aiak check records/ --fail-on high` would pass.
+    """
+    files: list[Path] = []
+    ok = True
+    for raw in paths:
+        found = find_record_files([raw])
+        if not found:
+            suffixes = ", ".join(RECORD_SUFFIXES)
+            print(f"{raw}: no record files ({suffixes}) in this directory", file=sys.stderr)
+            ok = False
+        files.extend(found)
+    return files, ok
 
 
 def _wrap(text: str, indent: str, first: str | None = None) -> str:
@@ -79,14 +116,16 @@ def cmd_init(args: argparse.Namespace, out: TextIO) -> int:
         .joinpath("data", "record.template.yaml")
         .read_text(encoding="utf-8")
     )
-    target.write_text(template, encoding="utf-8")
+    if not _write(target, template):
+        return EXIT_INVALID
     out.write(f"wrote {target}. Fill it in, then run: aiak check {target}\n")
     return EXIT_OK
 
 
 def cmd_validate(args: argparse.Namespace, out: TextIO) -> int:
-    status = EXIT_OK
-    for path in find_record_files(args.files):
+    paths, found_all = _record_files(args.files)
+    status = EXIT_OK if found_all else EXIT_INVALID
+    for path in paths:
         try:
             record = load_record(path)
         except RecordError as exc:
@@ -126,8 +165,9 @@ def cmd_check(args: argparse.Namespace, out: TextIO) -> int:
     policy = load_policy(args.policy)
     today = args.today or dt.date.today()
     results: list[tuple[Path, Assessment]] = []
-    status = EXIT_OK
-    for path in find_record_files(args.files):
+    paths, found_all = _record_files(args.files)
+    status = EXIT_OK if found_all else EXIT_INVALID
+    for path in paths:
         try:
             results.append((path, assess(load_record(path), policy, today)))
         except RecordError as exc:
@@ -214,9 +254,7 @@ def cmd_diff(args: argparse.Namespace, out: TextIO) -> int:
 def cmd_render(args: argparse.Namespace, out: TextIO) -> int:
     policy = load_policy(args.policy)
     record = load_record(args.file)
-    fmt: CardFormat = args.format or (
-        "html" if args.output and args.output.endswith(".html") else "md"
-    )
+    fmt: CardFormat = args.format or ("html" if _has_suffix(args.output, ".html", ".htm") else "md")
     text = render_card(
         record,
         policy,
@@ -225,16 +263,16 @@ def cmd_render(args: argparse.Namespace, out: TextIO) -> int:
         source=Path(args.file).as_posix(),
         redact_names=args.redact_names,
     )
-    _emit(text, args.output, out)
-    return EXIT_OK
+    return _emit(text, args.output, out)
 
 
 def cmd_register(args: argparse.Namespace, out: TextIO) -> int:
     policy = load_policy(args.policy)
     today = args.today or dt.date.today()
     items: list[tuple[str, Assessment]] = []
-    failed = False
-    for path in find_record_files(args.paths):
+    paths, found_all = _record_files(args.paths)
+    failed = not found_all
+    for path in paths:
         try:
             items.append((path.as_posix(), assess(load_record(path), policy, today)))
         except RecordError as exc:
@@ -245,16 +283,12 @@ def cmd_register(args: argparse.Namespace, out: TextIO) -> int:
     ids = [a.record.id for _, a in items]
     for dup in sorted({i for i in ids if ids.count(i) > 1}):
         print(f"warning: record id '{dup}' appears more than once", file=sys.stderr)
-    fmt: RegisterFormat = args.format or (
-        "csv" if args.output and args.output.endswith(".csv") else "md"
-    )
-    _emit(render_register(items, fmt=fmt, today=today), args.output, out)
-    return EXIT_OK
+    fmt: RegisterFormat = args.format or ("csv" if _has_suffix(args.output, ".csv") else "md")
+    return _emit(render_register(items, fmt=fmt, today=today), args.output, out)
 
 
 def cmd_schema(args: argparse.Namespace, out: TextIO) -> int:
-    _emit(json.dumps(json_schema(), indent=2) + "\n", args.output, out)
-    return EXIT_OK
+    return _emit(json.dumps(json_schema(), indent=2) + "\n", args.output, out)
 
 
 def cmd_rules(args: argparse.Namespace, out: TextIO) -> int:
