@@ -6,4 +6,6 @@ it does not implement, certify or satisfy any of them.
 
 __version__ = "0.1.0"
 
-__all__ = ["__version__"]
+from ai_assurance_kit.schema import SCHEMA_VERSION, AIUseRecord
+
+__all__ = ["SCHEMA_VERSION", "AIUseRecord", "__version__"]

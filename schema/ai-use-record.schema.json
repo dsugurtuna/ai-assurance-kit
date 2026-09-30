@@ -1,0 +1,1037 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/dsugurtuna/ai-assurance-kit/main/schema/ai-use-record.schema.json",
+  "$defs": {
+    "ATRSDetermination": {
+      "enum": [
+        "not_assessed",
+        "in_scope",
+        "out_of_scope"
+      ],
+      "title": "ATRSDetermination",
+      "type": "string"
+    },
+    "Access": {
+      "additionalProperties": false,
+      "properties": {
+        "users": {
+          "description": "Who can use the tool.",
+          "minLength": 1,
+          "title": "Users",
+          "type": "string"
+        },
+        "connectors": {
+          "items": {
+            "$ref": "#/$defs/Connector"
+          },
+          "title": "Connectors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "users"
+      ],
+      "title": "Access",
+      "type": "object"
+    },
+    "Accountability": {
+      "additionalProperties": false,
+      "description": "Who owns, builds, maintains and assures the use.\n\nLoosely mirrors the AQuA Book roles: business owner ~ commissioner, builder ~ analyst,\nassurer ~ assurer, approver ~ approver. Maintainer is added because AI systems change\nafter launch.",
+      "properties": {
+        "business_owner": {
+          "$ref": "#/$defs/Person",
+          "description": "Accountable for the use and its outcomes."
+        },
+        "builder": {
+          "$ref": "#/$defs/Person",
+          "description": "Builds or configures the system."
+        },
+        "maintainer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Person"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Keeps it working after launch: monitoring, updates, fixes."
+        },
+        "assurer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Person"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reviews the work independently of the builder."
+        },
+        "approver": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Person"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signs off that assurance is appropriate for the use."
+        }
+      },
+      "required": [
+        "business_owner",
+        "builder"
+      ],
+      "title": "Accountability",
+      "type": "object"
+    },
+    "ActionMode": {
+      "description": "What the system does with its outputs. Order matters: later modes act more on their own.",
+      "enum": [
+        "read_only",
+        "drafts",
+        "writes_with_approval",
+        "autonomous"
+      ],
+      "title": "ActionMode",
+      "type": "string"
+    },
+    "Actions": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/ActionMode"
+        },
+        "description": {
+          "description": "What the system does with its outputs.",
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "human_approval_step": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Who approves each send or write, and how.",
+          "title": "Human Approval Step"
+        },
+        "recipients": {
+          "description": "Who receives what the system sends or writes.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Recipients",
+          "type": "array"
+        },
+        "stop_mechanism": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How the system can be paused or switched off quickly.",
+          "title": "Stop Mechanism"
+        }
+      },
+      "required": [
+        "mode",
+        "description"
+      ],
+      "title": "Actions",
+      "type": "object"
+    },
+    "Connector": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "system": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The system it connects to.",
+          "title": "System"
+        },
+        "permissions": {
+          "items": {
+            "$ref": "#/$defs/Permission"
+          },
+          "minItems": 1,
+          "title": "Permissions",
+          "type": "array"
+        },
+        "purpose": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Purpose"
+        }
+      },
+      "required": [
+        "name",
+        "permissions"
+      ],
+      "title": "Connector",
+      "type": "object"
+    },
+    "Control": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ControlStatus",
+          "default": "planned"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        }
+      },
+      "required": [
+        "id",
+        "description"
+      ],
+      "title": "Control",
+      "type": "object"
+    },
+    "ControlStatus": {
+      "enum": [
+        "planned",
+        "in_place"
+      ],
+      "title": "ControlStatus",
+      "type": "string"
+    },
+    "DPIA": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/DPIAStatus",
+          "default": "not_screened"
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference"
+        },
+        "decided_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Role that made the screening call.",
+          "title": "Decided By"
+        },
+        "date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Date"
+        }
+      },
+      "title": "DPIA",
+      "type": "object"
+    },
+    "DPIAStatus": {
+      "enum": [
+        "not_screened",
+        "screened_not_required",
+        "required_in_progress",
+        "completed"
+      ],
+      "title": "DPIAStatus",
+      "type": "string"
+    },
+    "Data": {
+      "additionalProperties": false,
+      "properties": {
+        "categories": {
+          "description": "Kinds of data the system uses.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Categories",
+          "type": "array"
+        },
+        "personal_data": {
+          "title": "Personal Data",
+          "type": "boolean"
+        },
+        "special_category_data": {
+          "default": false,
+          "title": "Special Category Data",
+          "type": "boolean"
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "retention": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How long inputs, outputs and logs are kept.",
+          "title": "Retention"
+        },
+        "dpia": {
+          "$ref": "#/$defs/DPIA"
+        }
+      },
+      "required": [
+        "categories",
+        "personal_data"
+      ],
+      "title": "Data",
+      "type": "object"
+    },
+    "Decision": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/DecisionType"
+        },
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "by": {
+          "description": "Role that took the decision.",
+          "minLength": 1,
+          "title": "By",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "type",
+        "date",
+        "by"
+      ],
+      "title": "Decision",
+      "type": "object"
+    },
+    "DecisionRole": {
+      "description": "How much the output shapes a decision. Order matters.",
+      "enum": [
+        "information_only",
+        "decision_support",
+        "automated_decision"
+      ],
+      "title": "DecisionRole",
+      "type": "string"
+    },
+    "DecisionType": {
+      "description": "Separate governance decisions. Permission to build is not permission to deploy.",
+      "enum": [
+        "approve_build",
+        "connect_data",
+        "grant_access",
+        "share",
+        "go_live",
+        "retire"
+      ],
+      "title": "DecisionType",
+      "type": "string"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "performed_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Role that did the evaluation.",
+          "title": "Performed By"
+        },
+        "independent": {
+          "default": false,
+          "description": "Done by someone other than the builder.",
+          "title": "Independent",
+          "type": "boolean"
+        },
+        "link": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Link"
+        }
+      },
+      "required": [
+        "date",
+        "kind",
+        "summary"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "human_review_sample",
+        "offline_test_set",
+        "pilot",
+        "red_team",
+        "bias_review",
+        "accessibility_test",
+        "security_review",
+        "user_research",
+        "model_graded",
+        "usage_metrics",
+        "other"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "Hosting": {
+      "enum": [
+        "vendor_saas",
+        "organisation_cloud",
+        "on_premises",
+        "local_device",
+        "other"
+      ],
+      "title": "Hosting",
+      "type": "string"
+    },
+    "ModelKind": {
+      "enum": [
+        "generative",
+        "predictive",
+        "rules_based",
+        "other"
+      ],
+      "title": "ModelKind",
+      "type": "string"
+    },
+    "Permission": {
+      "enum": [
+        "read",
+        "write",
+        "send",
+        "delete",
+        "admin"
+      ],
+      "title": "Permission",
+      "type": "string"
+    },
+    "Person": {
+      "additionalProperties": false,
+      "description": "A role holder. The role title is required; the name is optional.",
+      "properties": {
+        "role": {
+          "description": "Role title, e.g. 'Service owner'.",
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name of the person holding the role (internal use; can be redacted).",
+          "title": "Name"
+        },
+        "team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "Person",
+      "type": "object"
+    },
+    "Reliance": {
+      "additionalProperties": false,
+      "properties": {
+        "relied_on_by": {
+          "description": "Who relies on the outputs.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Relied On By",
+          "type": "array"
+        },
+        "how_outputs_are_used": {
+          "minLength": 1,
+          "title": "How Outputs Are Used",
+          "type": "string"
+        },
+        "decision_role": {
+          "$ref": "#/$defs/DecisionRole"
+        },
+        "public_facing": {
+          "description": "Members of the public interact with it directly.",
+          "title": "Public Facing",
+          "type": "boolean"
+        },
+        "public_effect": {
+          "description": "Outputs feed decisions that affect members of the public or organisations.",
+          "title": "Public Effect",
+          "type": "boolean"
+        },
+        "significant_influence": {
+          "default": false,
+          "description": "Outputs significantly influence those decisions.",
+          "title": "Significant Influence",
+          "type": "boolean"
+        },
+        "human_review": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How a person checks outputs before they are relied on.",
+          "title": "Human Review"
+        },
+        "challenge_route": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How affected people can question or appeal an outcome.",
+          "title": "Challenge Route"
+        },
+        "user_notice": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How people are told that AI is involved.",
+          "title": "User Notice"
+        },
+        "scale": {
+          "$ref": "#/$defs/Scale"
+        }
+      },
+      "required": [
+        "relied_on_by",
+        "how_outputs_are_used",
+        "decision_role",
+        "public_facing",
+        "public_effect"
+      ],
+      "title": "Reliance",
+      "type": "object"
+    },
+    "Review": {
+      "additionalProperties": false,
+      "properties": {
+        "last_reviewed": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Reviewed"
+        },
+        "next_review": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Review"
+        }
+      },
+      "title": "Review",
+      "type": "object"
+    },
+    "Risk": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "likelihood": {
+          "description": "1 (rare) to 5 (almost certain).",
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Likelihood",
+          "type": "integer"
+        },
+        "impact": {
+          "description": "1 (minimal) to 5 (severe).",
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Impact",
+          "type": "integer"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Role that owns this risk.",
+          "title": "Owner"
+        },
+        "controls": {
+          "description": "IDs of controls that treat it.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Controls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "likelihood",
+        "impact"
+      ],
+      "title": "Risk",
+      "type": "object"
+    },
+    "Scale": {
+      "additionalProperties": false,
+      "properties": {
+        "users": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Users"
+        },
+        "uses_per_month": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uses Per Month"
+        }
+      },
+      "title": "Scale",
+      "type": "object"
+    },
+    "Status": {
+      "description": "Lifecycle status. Order matters: later statuses need more evidence.",
+      "enum": [
+        "proposed",
+        "approved_to_build",
+        "in_test",
+        "live",
+        "retired"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "System": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "description": "What the system is, in a sentence.",
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "model_kind": {
+          "$ref": "#/$defs/ModelKind"
+        },
+        "model": {
+          "description": "Model or product name, or a generic label.",
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "description": "Who provides the model, or 'in-house'.",
+          "minLength": 1,
+          "title": "Provider",
+          "type": "string"
+        },
+        "platform": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where it runs or is built.",
+          "title": "Platform"
+        },
+        "hosting": {
+          "$ref": "#/$defs/Hosting"
+        },
+        "third_party_supplier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supplier of the tool or model, if a third party is involved.",
+          "title": "Third Party Supplier"
+        }
+      },
+      "required": [
+        "description",
+        "model_kind",
+        "model",
+        "provider",
+        "hosting"
+      ],
+      "title": "System",
+      "type": "object"
+    },
+    "Transparency": {
+      "additionalProperties": false,
+      "properties": {
+        "atrs_determination": {
+          "$ref": "#/$defs/ATRSDetermination",
+          "default": "not_assessed"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "record_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Record Url"
+        }
+      },
+      "title": "Transparency",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A structured record of one AI use case (ai-assurance-kit). Unofficial; not government guidance.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "description": "Stable slug, e.g. 'notes-ai'.",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "version": {
+      "default": "1",
+      "description": "Version of this record.",
+      "title": "Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/Status"
+    },
+    "organisation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Organisation"
+    },
+    "summary": {
+      "description": "Two or three plain-English sentences for a general reader.",
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "purpose": {
+      "description": "The problem this solves and for whom.",
+      "minLength": 1,
+      "title": "Purpose",
+      "type": "string"
+    },
+    "benefits": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Benefits",
+      "type": "array"
+    },
+    "alternatives_considered": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Non-AI or simpler options considered, and why not chosen.",
+      "title": "Alternatives Considered"
+    },
+    "accountability": {
+      "$ref": "#/$defs/Accountability"
+    },
+    "system": {
+      "$ref": "#/$defs/System"
+    },
+    "data": {
+      "$ref": "#/$defs/Data"
+    },
+    "access": {
+      "$ref": "#/$defs/Access"
+    },
+    "actions": {
+      "$ref": "#/$defs/Actions"
+    },
+    "reliance": {
+      "$ref": "#/$defs/Reliance"
+    },
+    "risks": {
+      "items": {
+        "$ref": "#/$defs/Risk"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "controls": {
+      "items": {
+        "$ref": "#/$defs/Control"
+      },
+      "title": "Controls",
+      "type": "array"
+    },
+    "evaluation": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Evaluation",
+      "type": "array"
+    },
+    "decisions": {
+      "items": {
+        "$ref": "#/$defs/Decision"
+      },
+      "title": "Decisions",
+      "type": "array"
+    },
+    "transparency": {
+      "$ref": "#/$defs/Transparency"
+    },
+    "review": {
+      "$ref": "#/$defs/Review"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "status",
+    "summary",
+    "purpose",
+    "accountability",
+    "system",
+    "data",
+    "access",
+    "actions",
+    "reliance"
+  ],
+  "title": "AI use record",
+  "type": "object"
+}
