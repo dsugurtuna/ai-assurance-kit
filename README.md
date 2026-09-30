@@ -61,8 +61,8 @@ examples/grant-triage.yaml
     - Senior or specialist approval: The system sends or writes without a person approving each
       action. (action_mode = autonomous)
     - Use-specific review: Personal data is processed. (personal_data = true)
-    - Use-specific review: The system itself sends or writes, even if a person approves each
-      action. (sends_or_writes = true)
+    - Use-specific review: The system itself sends or writes, even if a person approves each action.
+      (sends_or_writes = true)
     - Use-specific review: Outputs support decisions, so errors can shape outcomes. (decision_role =
       decision_support)
   Prompts for human judgement, not verdicts: 2 high, 2 warning, 0 info

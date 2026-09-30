@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import io
 import re
+
+import pytest
 
 from ai_assurance_kit.docs import CROSSWALK_BEGIN, CROSSWALK_END, crosswalk_table, rules_markdown
 from ai_assurance_kit.sources import AI_PLAYBOOK_PRINCIPLES, NIST_FUNCTIONS
@@ -59,3 +62,17 @@ def test_docs_do_not_claim_compliance() -> None:
         for line in path.read_text(encoding="utf-8").splitlines():
             if banned.search(line):
                 assert "not" in line.lower() or "does not" in line.lower(), f"{path.name}: {line}"
+
+
+def test_readme_real_output_is_real(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The README quotes the output of one command as "Real output". It must be exactly that.
+    from ai_assurance_kit.cli import main
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    found = re.search(r"Real output of `aiak ([^`]+)`:\n\n```text\n(.*?)```", readme, re.S)
+    assert found, "the README should quote a real command's output"
+    argv, quoted = found.group(1).split(), found.group(2)
+    monkeypatch.chdir(ROOT)
+    out = io.StringIO()
+    main(argv, stdout=out)
+    assert out.getvalue() == quoted
