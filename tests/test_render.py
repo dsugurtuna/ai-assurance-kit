@@ -62,6 +62,24 @@ def test_redacted_card_hides_names(policy: Policy) -> None:
     assert "(names redacted)" in text
 
 
+@pytest.mark.parametrize("fmt", ["md", "html"])
+def test_redacted_card_hides_names_in_prompts(fmt: str, policy: Policy) -> None:
+    # In this example the builder and assurer share a name, so AIAK-ROLE-001 fires. Its prompt
+    # must not carry the name into a card that was asked to show role titles only.
+    record = load_record(EXAMPLES / "service-chatbot.yaml")
+    text = render_card(record, policy, fmt=fmt, today=TODAY, redact_names=True)  # type: ignore[arg-type]
+    assert "AIAK-ROLE-001" in text
+    for person in (
+        record.accountability.business_owner,
+        record.accountability.builder,
+        record.accountability.maintainer,
+        record.accountability.assurer,
+    ):
+        assert person is not None
+        assert person.name
+        assert person.name not in text
+
+
 def test_markdown_escapes_table_pipes(make_record: Make, policy: Policy) -> None:
     text = render_card(make_record({"purpose": "Either | or"}), policy, today=TODAY)
     assert "| Purpose | Either \\| or |" in text

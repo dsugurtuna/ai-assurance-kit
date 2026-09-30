@@ -41,7 +41,7 @@ Why this level (policy: Example policy (adapt before use)):
 | Severity | Check | Prompt |
 |---|---|---|
 | high | AIAK-RISK-001: Risk above appetite with no owner | Risk R3 scores 4 x 3 = 12, above the policy appetite of 9, and has no owner. Name the role that owns it. |
-| high | AIAK-ROLE-001: Builder and assurer appear to be the same person | Builder and assurer are both recorded as 'Sam Mock'. Name an assurer who did not build it, or record why that is not possible and who accepts that. |
+| high | AIAK-ROLE-001: Builder and assurer appear to be the same person | The builder ('Contact centre technology lead') and the assurer ('Contact centre technology lead (acting assurer)') are recorded with the same name. Name an assurer who did not build it, or record why that is not possible and who accepts that. |
 | warning | AIAK-DATA-002: No retention period recorded for personal data | Record how long inputs, outputs and logs containing personal data are kept, and where. |
 | warning | AIAK-EVAL-003: Model-graded evidence without a human-checked sample | Quality evidence includes model grading but no human-checked sample or pilot. Add a sample checked by people with subject knowledge, and record how often they disagreed with the grader. |
 | warning | AIAK-RISK-002: Risk above appetite with no control in place | Risk R3 (12) is above appetite and none of its controls is in place yet (planned: C3). Put a control in place, or record who accepts the risk. |

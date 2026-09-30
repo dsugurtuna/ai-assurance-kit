@@ -176,6 +176,16 @@ def test_approval_described_satisfies_act_001(make_record: Make, fired: Fired) -
     assert "AIAK-ACT-001" not in _ids(fired(record))
 
 
+def test_role_001_prompt_names_roles_not_people(make_record: Make, fired: Fired) -> None:
+    # Names are optional and redactable; prompts end up in cards, JSON and CI logs, so they
+    # identify the roles involved rather than repeating the person's name.
+    record = make_record(TRIGGERS["AIAK-ROLE-001"])
+    finding = next(f for f in fired(record) if f.rule.id == "AIAK-ROLE-001")
+    assert "builder person" not in finding.message.casefold()
+    assert "'Developer'" in finding.message
+    assert "'Assurer'" in finding.message
+
+
 def test_same_person_needs_both_names(make_record: Make, fired: Fired) -> None:
     record = make_record(
         {

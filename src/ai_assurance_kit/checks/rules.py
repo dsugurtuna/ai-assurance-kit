@@ -317,9 +317,12 @@ def builder_is_assurer(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     acc = record.accountability
     if _same_person(acc.builder, acc.assurer):
         assert acc.assurer is not None
+        # Name the roles, not the person: names are optional and can be redacted from cards,
+        # and prompts are copied into cards, JSON output and CI logs.
         yield Hit(
-            f"Builder and assurer are both recorded as '{acc.assurer.name}'. Name an assurer "
-            "who did not build it, or record why that is not possible and who accepts that.",
+            f"The builder ('{acc.builder.role}') and the assurer ('{acc.assurer.role}') are "
+            "recorded with the same name. Name an assurer who did not build it, or record why "
+            "that is not possible and who accepts that.",
             ("accountability.builder", "accountability.assurer"),
         )
 
