@@ -35,7 +35,7 @@ Why this level (policy: Example policy (adapt before use)):
 - **Senior or specialist approval**: Outputs significantly influence decisions that affect the public or organisations. (`significant_public_effect = true`)
 - **Senior or specialist approval**: The system sends or writes without a person approving each action. (`action_mode = autonomous`)
 - **Use-specific review**: Personal data is processed. (`personal_data = true`)
-- **Use-specific review**: The system sends or writes on its own, not only drafts for a person. (`sends_or_writes = true`)
+- **Use-specific review**: The system itself sends or writes, even if a person approves each action. (`sends_or_writes = true`)
 - **Use-specific review**: Outputs support decisions, so errors can shape outcomes. (`decision_role = decision_support`)
 
 ## Prompts for human judgement (2 high, 2 warning, 0 info)
@@ -45,7 +45,7 @@ Why this level (policy: Example policy (adapt before use)):
 | high | AIAK-ACT-001: Sends or writes without a human approval step | The system sends or writes without a person approving each action. Record who decided that per-action approval is not needed, the limits that apply (what, to whom, how often) and how errors are noticed and reversed. |
 | high | AIAK-RISK-001: Risk above appetite with no owner | Risk R4 scores 3 x 4 = 12, above the policy appetite of 9, and has no owner. Name the role that owns it. |
 | warning | AIAK-ACT-002: No way to stop the system is recorded | Record how the system can be paused or switched off quickly, who can do it, and when it was last tried. |
-| warning | AIAK-RISK-002: Risk above appetite with no control in place | Risk R4 (12) is above appetite and no linked control is in place (planned: none linked). Put a control in place, or record who accepts the risk. |
+| warning | AIAK-RISK-002: Risk above appetite with no control in place | Risk R4 (12) is above appetite and it has no linked controls. Put a control in place, or record who accepts the risk. |
 
 ## Risks (appetite: scores above 9)
 

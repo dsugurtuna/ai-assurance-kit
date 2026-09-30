@@ -107,7 +107,7 @@
     <ul class="tight">
       <li><strong>Use-specific review</strong>: Personal data is processed. (<code>personal_data = true</code>)</li>
       <li><strong>Use-specific review</strong>: Members of the public interact with the system directly. (<code>public_facing = true</code>)</li>
-      <li><strong>Use-specific review</strong>: The system sends or writes on its own, not only drafts for a person. (<code>sends_or_writes = true</code>)</li>
+      <li><strong>Use-specific review</strong>: The system itself sends or writes, even if a person approves each action. (<code>sends_or_writes = true</code>)</li>
     </ul>
   </div>
 </section>
@@ -122,7 +122,7 @@
       <tr><td><span class="sev sev-high">high</span></td><td><code>AIAK-ROLE-001</code> Builder and assurer appear to be the same person</td><td>Builder and assurer are both recorded as &#39;Sam Mock&#39;. Name an assurer who did not build it, or record why that is not possible and who accepts that.</td></tr>
       <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-DATA-002</code> No retention period recorded for personal data</td><td>Record how long inputs, outputs and logs containing personal data are kept, and where.</td></tr>
       <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-EVAL-003</code> Model-graded evidence without a human-checked sample</td><td>Quality evidence includes model grading but no human-checked sample or pilot. Add a sample checked by people with subject knowledge, and record how often they disagreed with the grader.</td></tr>
-      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-RISK-002</code> Risk above appetite with no control in place</td><td>Risk R3 (12) is above appetite and no linked control is in place (planned: C3). Put a control in place, or record who accepts the risk.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-RISK-002</code> Risk above appetite with no control in place</td><td>Risk R3 (12) is above appetite and none of its controls is in place yet (planned: C3). Put a control in place, or record who accepts the risk.</td></tr>
       <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-TRANS-001</code> ATRS: likely in scope, record the determination</td><td>The record says members of the public interact with it directly. If your organisation is covered by the ATRS mandatory scope, this tool is likely in scope. Record the determination (in scope or out of scope, and why) in transparency.atrs_determination.</td></tr>
       <tr><td><span class="sev sev-info">info</span></td><td><code>AIAK-EVAL-004</code> No independent evaluation recorded</td><td>None of the recorded evaluations is marked independent. Record any done by someone outside the build team, or plan one.</td></tr>
       <tr><td><span class="sev sev-info">info</span></td><td><code>AIAK-TRANS-002</code> Public-facing use with no user notice recorded</td><td>Record how members of the public are told that AI is involved and what it can and cannot do.</td></tr>

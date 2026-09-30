@@ -108,7 +108,7 @@
       <li><strong>Senior or specialist approval</strong>: Outputs significantly influence decisions that affect the public or organisations. (<code>significant_public_effect = true</code>)</li>
       <li><strong>Senior or specialist approval</strong>: The system sends or writes without a person approving each action. (<code>action_mode = autonomous</code>)</li>
       <li><strong>Use-specific review</strong>: Personal data is processed. (<code>personal_data = true</code>)</li>
-      <li><strong>Use-specific review</strong>: The system sends or writes on its own, not only drafts for a person. (<code>sends_or_writes = true</code>)</li>
+      <li><strong>Use-specific review</strong>: The system itself sends or writes, even if a person approves each action. (<code>sends_or_writes = true</code>)</li>
       <li><strong>Use-specific review</strong>: Outputs support decisions, so errors can shape outcomes. (<code>decision_role = decision_support</code>)</li>
     </ul>
   </div>
@@ -123,7 +123,7 @@
       <tr><td><span class="sev sev-high">high</span></td><td><code>AIAK-ACT-001</code> Sends or writes without a human approval step</td><td>The system sends or writes without a person approving each action. Record who decided that per-action approval is not needed, the limits that apply (what, to whom, how often) and how errors are noticed and reversed.</td></tr>
       <tr><td><span class="sev sev-high">high</span></td><td><code>AIAK-RISK-001</code> Risk above appetite with no owner</td><td>Risk R4 scores 3 x 4 = 12, above the policy appetite of 9, and has no owner. Name the role that owns it.</td></tr>
       <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-ACT-002</code> No way to stop the system is recorded</td><td>Record how the system can be paused or switched off quickly, who can do it, and when it was last tried.</td></tr>
-      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-RISK-002</code> Risk above appetite with no control in place</td><td>Risk R4 (12) is above appetite and no linked control is in place (planned: none linked). Put a control in place, or record who accepts the risk.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-RISK-002</code> Risk above appetite with no control in place</td><td>Risk R4 (12) is above appetite and it has no linked controls. Put a control in place, or record who accepts the risk.</td></tr>
     </tbody>
   </table>
 </section>

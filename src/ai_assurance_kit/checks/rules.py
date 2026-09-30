@@ -512,13 +512,19 @@ def risk_without_control(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit
         if r.score <= appetite:
             continue
         linked = [c for cid in r.controls if (c := record.control(cid)) is not None]
-        if not any(c.status is ControlStatus.in_place for c in linked):
-            planned = ", ".join(c.id for c in linked) or "none linked"
-            yield Hit(
-                f"Risk {r.id} ({r.score}) is above appetite and no linked control is in place "
-                f"(planned: {planned}). Put a control in place, or record who accepts the risk.",
-                (f"risks[{i}].controls",),
+        if any(c.status is ControlStatus.in_place for c in linked):
+            continue
+        if linked:
+            state = (
+                f"none of its controls is in place yet (planned: {', '.join(c.id for c in linked)})"
             )
+        else:
+            state = "it has no linked controls"
+        yield Hit(
+            f"Risk {r.id} ({r.score}) is above appetite and {state}. Put a control in place, "
+            "or record who accepts the risk.",
+            (f"risks[{i}].controls",),
+        )
 
 
 @rule(

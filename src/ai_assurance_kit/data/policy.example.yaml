@@ -50,7 +50,7 @@ triggers:
   - feature: sends_or_writes
     equals: true
     level: use_specific
-    reason: The system sends or writes on its own, not only drafts for a person.
+    reason: The system itself sends or writes, even if a person approves each action.
   - feature: decision_role
     equals: decision_support
     level: use_specific

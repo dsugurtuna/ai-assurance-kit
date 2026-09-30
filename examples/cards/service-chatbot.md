@@ -34,7 +34,7 @@ Why this level (policy: Example policy (adapt before use)):
 
 - **Use-specific review**: Personal data is processed. (`personal_data = true`)
 - **Use-specific review**: Members of the public interact with the system directly. (`public_facing = true`)
-- **Use-specific review**: The system sends or writes on its own, not only drafts for a person. (`sends_or_writes = true`)
+- **Use-specific review**: The system itself sends or writes, even if a person approves each action. (`sends_or_writes = true`)
 
 ## Prompts for human judgement (2 high, 4 warning, 2 info)
 
@@ -44,7 +44,7 @@ Why this level (policy: Example policy (adapt before use)):
 | high | AIAK-ROLE-001: Builder and assurer appear to be the same person | Builder and assurer are both recorded as 'Sam Mock'. Name an assurer who did not build it, or record why that is not possible and who accepts that. |
 | warning | AIAK-DATA-002: No retention period recorded for personal data | Record how long inputs, outputs and logs containing personal data are kept, and where. |
 | warning | AIAK-EVAL-003: Model-graded evidence without a human-checked sample | Quality evidence includes model grading but no human-checked sample or pilot. Add a sample checked by people with subject knowledge, and record how often they disagreed with the grader. |
-| warning | AIAK-RISK-002: Risk above appetite with no control in place | Risk R3 (12) is above appetite and no linked control is in place (planned: C3). Put a control in place, or record who accepts the risk. |
+| warning | AIAK-RISK-002: Risk above appetite with no control in place | Risk R3 (12) is above appetite and none of its controls is in place yet (planned: C3). Put a control in place, or record who accepts the risk. |
 | warning | AIAK-TRANS-001: ATRS: likely in scope, record the determination | The record says members of the public interact with it directly. If your organisation is covered by the ATRS mandatory scope, this tool is likely in scope. Record the determination (in scope or out of scope, and why) in transparency.atrs_determination. |
 | info | AIAK-EVAL-004: No independent evaluation recorded | None of the recorded evaluations is marked independent. Record any done by someone outside the build team, or plan one. |
 | info | AIAK-TRANS-002: Public-facing use with no user notice recorded | Record how members of the public are told that AI is involved and what it can and cannot do. |
