@@ -102,7 +102,7 @@ Sources:
 
 **Personal data with no DPIA screening recorded** (severity: high; skipped when status is: retired)
 
-Why: Whether a data protection impact assessment is needed is a decision for the organisation's data protection lead. The kit cannot make it, but it can notice when no decision is recorded.
+Why: Whether a data protection impact assessment is needed is a decision for the organisation, typically involving its data protection lead. The kit cannot make it, but it can notice when no decision is recorded.
 
 Sources:
 
@@ -136,7 +136,7 @@ Sources:
 
 **ATRS: likely in scope, record the determination** (severity: warning; skipped when status is: retired)
 
-Why: The ATRS guidance says the standard is mandatory for all government departments and for arm's-length bodies which deliver public or frontline services or directly interact with the general public; within those organisations it is mandatory for algorithmic tools which "have a significant influence on a decision-making process with public effect, or directly interact with the general public". Whether a tool is in scope is your organisation's call; the kit only notices the features that make the question worth asking.
+Why: The ATRS guidance says the standard is mandatory for all government departments and for arm's-length bodies which deliver public or frontline services or directly interact with the general public; within those organisations it is mandatory for algorithmic tools which "have a significant influence on a decision-making process with public effect, or directly interact with the general public". The kit cannot decide whether a tool is in scope or whether an exemption applies; it only notices the features that make the question worth asking.
 
 Sources:
 
@@ -158,7 +158,7 @@ Sources:
 
 **Builder and assurer appear to be the same person** (severity: high; skipped when status is: retired)
 
-Why: The AQuA Book, which this kit borrows its roles from, keeps the analyst and assurer roles separate: the analyst assures their own work, and formal assurance comes from someone else. The kit treats the builder as the analyst role.
+Why: The AQuA Book, which this kit borrows its roles from, keeps the analyst and assurer roles separate: the analyst assures their own work, and formal assurance comes from someone else. (Checked against the final pre-publication draft of its second edition, not the published edition.) The kit treats the builder as the analyst role.
 
 Sources:
 

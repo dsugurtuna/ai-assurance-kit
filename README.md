@@ -91,7 +91,7 @@ All three example organisations, people and figures are invented. Rendered cards
 | `aiak check FILE... --format json` | Machine-readable results, including sources for each prompt. |
 | `aiak check records/ --fail-on high` | Exit 1 if any prompt is at or above a severity. Use in CI. |
 | `aiak diff OLD NEW --fail-on-material` | Exit 1 if the change needs re-review. |
-| `aiak render FILE --redact-names` | Card with role titles only, no personal names. |
+| `aiak render FILE --redact-names` | Card showing role titles in place of the name fields. |
 | `aiak schema -o schema.json` | Export the JSON Schema. |
 | `aiak rules [--format md]` | List the checks. |
 | `aiak policy [--features \| --validate FILE]` | Print the example policy, list the features it can use, or validate your own. |
@@ -117,7 +117,7 @@ One page, in this order, as Markdown or as a standalone HTML file with no script
 7. **Evidence and decisions** as one dated timeline.
 8. **Footer**: links to the sources behind the prompts that fired, and the file it was generated from.
 
-The HTML card uses semantic landmarks, table headers with scope, text labels as well as colour for severity, a dark-mode palette on screen and A4 print styles. `--redact-names` shows role titles only, for sharing beyond the team.
+The HTML card uses semantic landmarks, table headers with scope, text labels as well as colour for severity, a dark-mode palette on screen and A4 print styles. `--redact-names` shows role titles in place of the name fields, for sharing beyond the team. It cannot find names typed into free-text fields, such as a summary or a risk owner, so read the card before sharing it.
 
 ## How it works
 

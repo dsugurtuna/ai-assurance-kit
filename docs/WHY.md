@@ -54,7 +54,7 @@ Because risk appetite and review thresholds must be set by whoever is accountabl
 Because the riskiest moment in a use case's life is often after approval, when data, connectors, recipients or autonomy are added one small step at a time. A generic diff shows everything that moved; the material-change rules say which moves should reopen review, and why. Treating every change as material would make people ignore the flag.
 
 **Why role titles required and names optional?**
-Because published transparency records name roles rather than people (the ATRS guidance asks for the senior responsible owner as a role title, for continuity and security), while internal assurance sometimes needs names, for example to notice that the builder is also the assurer. `--redact-names` produces a card with roles only.
+Because published transparency records name roles rather than people (the ATRS guidance asks for the senior responsible owner as a role title, for continuity and security), while internal assurance sometimes needs names, for example to notice that the builder is also the assurer. `--redact-names` produces a card that shows roles in place of the name fields (it cannot find names typed into free text).
 
 **Why borrow the AQuA Book's roles?**
 Because the separation between the person who builds something and the person who assures it is well established in analytical quality assurance, and it applies directly to AI systems. The kit maps business owner, builder, assurer and approver onto the AQuA commissioner, analyst, assurer and approver, and adds a maintainer because AI systems keep changing after launch.

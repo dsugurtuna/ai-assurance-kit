@@ -8,7 +8,8 @@ The rule for this project is: anything the kit says about public guidance is che
 
 When the kit was written (September 2026), the build environment could not reach gov.uk, ico.org.uk or nist.gov directly. So each source was checked in the best available way, and this page says which:
 
-- **Read in an official copy**: the text was read in full from a copy published by the organisation responsible (for example on its own GitHub account).
+- **Read in an official copy**: the text relied on was read in a copy published by the organisation responsible (for example on its own GitHub account).
+- **Read in a pre-publication draft**: as above, but the copy is a draft that its publisher says has no official status, so the published edition may differ.
 - **Confirmed via search**: a fact (a date, a page title, a URL) was confirmed from search results pointing at the primary page, but the page itself was not read.
 - **Not fetched; kept generic**: the kit only points to the source and makes no specific claim about its content.
 
@@ -56,7 +57,7 @@ Quotations of NIST text are lightly normalised (capitalisation, dashes) and shor
 ### The AQuA Book
 
 - URL: <https://www.gov.uk/guidance/the-aqua-book>
-- Status: **read in an official copy, with a caveat.** The role definitions were read in the Government Analysis Function's source repository <https://github.com/best-practice-and-impact/aqua_book_revision>. That repository holds the *final pre-publication draft* of the second edition and says the draft "has no official status"; it says the second edition was published on GOV.UK in July 2025.
+- Status: **read in a pre-publication draft, not the published edition.** The role definitions were read in the Government Analysis Function's source repository <https://github.com/best-practice-and-impact/aqua_book_revision>. That repository holds the *final pre-publication draft* of the second edition and says the draft "has no official status"; it says the second edition was published on GOV.UK in July 2025.
 - Confirmed (in the draft): the four roles commissioner, analyst, assurer and approver; "The roles of analyst and assurer shall be distinct from each other"; and, in the Proportionality chapter, "The assurer and the analyst shall be independent."
 - Re-check against the published GOV.UK edition before quoting.
 

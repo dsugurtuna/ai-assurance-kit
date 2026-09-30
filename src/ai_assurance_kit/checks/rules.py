@@ -193,8 +193,8 @@ def no_recipients(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     "Personal data with no DPIA screening recorded",
     Severity.high,
     """Whether a data protection impact assessment is needed is a decision for the
-    organisation's data protection lead. The kit cannot make it, but it can notice when no
-    decision is recorded.""",
+    organisation, typically involving its data protection lead. The kit cannot make it, but it
+    can notice when no decision is recorded.""",
     refs=[
         Ref("ico-dpia"),
         atrs("Development Data Specification (Tier 2)"),
@@ -261,8 +261,9 @@ def special_category_screened_out(record: AIUseRecord, ctx: CheckContext) -> Ite
     arm's-length bodies which deliver public or frontline services or directly interact with the
     general public; within those organisations it is mandatory for algorithmic tools which "have
     a significant influence on a decision-making process with public effect, or directly
-    interact with the general public". Whether a tool is in scope is your organisation's call;
-    the kit only notices the features that make the question worth asking.""",
+    interact with the general public". The kit cannot decide whether a tool is in scope or
+    whether an exemption applies; it only notices the features that make the question worth
+    asking.""",
     refs=[
         Ref("atrs-scope"),
         Ref("atrs-guidance", "ATRS purpose and scope"),
@@ -310,7 +311,8 @@ def no_user_notice(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     Severity.high,
     """The AQuA Book, which this kit borrows its roles from, keeps the analyst and assurer roles
     separate: the analyst assures their own work, and formal assurance comes from someone else.
-    The kit treats the builder as the analyst role.""",
+    (Checked against the final pre-publication draft of its second edition, not the published
+    edition.) The kit treats the builder as the analyst role.""",
     refs=[Ref("aqua-book", "Roles and responsibilities"), nist("MEASURE 1.3")],
 )
 def builder_is_assurer(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
