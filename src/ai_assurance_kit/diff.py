@@ -12,6 +12,7 @@ should still see everything that moved.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -82,13 +83,26 @@ class DiffReport:
 # --------------------------------------------------------------------------- generic diff
 
 
+@dataclass(frozen=True)
+class _Items:
+    """An unkeyed list of objects (evaluation, decisions), compared item by item.
+
+    Each item is identified by all of its fields, not just its label, so an edit to any field
+    (for example marking evidence as independent) is a change.
+    """
+
+    items: tuple[str, ...]  # canonical JSON of each item
+    labels: tuple[str, ...]  # what a reader sees
+
+
 def flatten(value: Any, path: str = "") -> dict[str, Any]:
     """Flatten a JSON-like value into {dotted.path: leaf}.
 
     Lists of objects with a natural key (risk id, control id, connector name) are keyed by it and
     flattened further, so reordering is not a change. Other lists of objects (evaluation,
-    decisions) are indexed and each item is one leaf, so an added item reads as one change.
-    Lists of plain values are kept whole and compared as sorted tuples.
+    decisions) become one leaf that field_changes compares item by item, so an added item reads
+    as one change wherever it is inserted, and reordering is not a change. Lists of plain
+    values are kept whole and compared as sorted tuples.
     """
     out: dict[str, Any] = {}
     if isinstance(value, dict):
@@ -97,17 +111,48 @@ def flatten(value: Any, path: str = "") -> dict[str, Any]:
     elif isinstance(value, list):
         key = _KEYED_LISTS.get(path.rsplit(".", 1)[-1])
         if value and all(isinstance(v, dict) for v in value):
-            for i, v in enumerate(value):
-                label = v.get(key) if key else None
-                if label is not None:
-                    out.update(flatten(v, f"{path}[{label}]"))
-                else:
-                    out[f"{path}[{i}]"] = _item_label(v)
+            if key and all(v.get(key) is not None for v in value):
+                for v in value:
+                    out.update(flatten(v, f"{path}[{v[key]}]"))
+            else:
+                out[path] = _Items(
+                    tuple(json.dumps(v, sort_keys=True, default=str) for v in value),
+                    tuple(_item_label(v) for v in value),
+                )
         else:
             out[path] = tuple(sorted(value, key=str))
     else:
         out[path] = value
     return out
+
+
+def _item_changes(path: str, before: Any, after: Any) -> list[Change]:
+    """Match unkeyed items by content: what was added, removed or edited, ignoring order."""
+    old = before if isinstance(before, _Items) else _Items((), ())
+    new = after if isinstance(after, _Items) else _Items((), ())
+    unmatched_new = list(range(len(new.items)))
+    unmatched_old: list[int] = []
+    for i, item in enumerate(old.items):
+        j = next((j for j in unmatched_new if new.items[j] == item), None)
+        if j is None:
+            unmatched_old.append(i)
+        else:
+            unmatched_new.remove(j)
+    # Leftovers on both sides are read as edits, in order; the rest as removals or additions.
+    # An edit carries the whole item, because the edited field may not be in the label.
+    changes = [
+        Change(f"{path}[{j}]", "changed", json.loads(old.items[i]), json.loads(new.items[j]))
+        for i, j in zip(unmatched_old, unmatched_new, strict=False)
+    ]
+    changes += [
+        Change(f"{path}[{i}]", "removed", old.labels[i], None)
+        for i in unmatched_old[len(unmatched_new) :]
+    ]
+    changes += [
+        Change(f"{path}[{j}]", "added", None, new.labels[j])
+        for j in unmatched_new[len(unmatched_old) :]
+    ]
+    return changes
 
 
 def _item_label(item: dict[str, Any]) -> str:
@@ -129,6 +174,9 @@ def field_changes(old: AIUseRecord, new: AIUseRecord) -> list[Change]:
     for path in sorted(set(a) | set(b)):
         before, after = a.get(path), b.get(path)
         if before == after:
+            continue
+        if isinstance(before, _Items) or isinstance(after, _Items):
+            changes.extend(_item_changes(path, before, after))
             continue
         # An empty list that gains items (or loses them all) shows up as item changes instead.
         if () in (before, after) and any(p.startswith(path + "[") for p in {*a, *b}):

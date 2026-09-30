@@ -271,6 +271,52 @@ def test_added_list_items_read_as_one_change(make_record: Make, policy: Policy) 
     assert [(c.path, c.summary) for c in report.other] == [("evaluation[1]", "added")]
 
 
+_SAMPLES = [
+    {"date": f"2026-0{m}-01", "kind": "human_review_sample", "summary": f"Sample {m}."}
+    for m in (3, 2, 1)
+]
+
+
+def test_item_added_to_a_newest_first_list_reads_as_one_change(
+    make_record: Make, policy: Policy
+) -> None:
+    # Many teams list evidence newest first. Adding one item at the top must not report the
+    # existing evidence as "changed", which would read as evidence being altered.
+    old = make_record({"evaluation": _SAMPLES})
+    pilot = {"date": "2026-04-01", "kind": "pilot", "summary": "Pilot."}
+    new = make_record({"evaluation": [pilot, *_SAMPLES]})
+    report = diff_records(old, new, policy)
+    assert [(c.path, c.summary) for c in report.other] == [("evaluation[0]", "added")]
+    assert report.other[0].after == "2026-04-01 pilot: Pilot."
+
+
+def test_reordering_unkeyed_items_is_not_a_change(make_record: Make, policy: Policy) -> None:
+    old = make_record({"evaluation": _SAMPLES})
+    new = make_record({"evaluation": list(reversed(_SAMPLES))})
+    assert diff_records(old, new, policy).other == []
+
+
+def test_edit_to_one_item_is_reported_for_that_item(make_record: Make, policy: Policy) -> None:
+    edited = [_SAMPLES[0], {**_SAMPLES[1], "independent": True}, _SAMPLES[2]]
+    report = diff_records(
+        make_record({"evaluation": _SAMPLES}), make_record({"evaluation": edited}), policy
+    )
+    assert [(c.path, c.summary) for c in report.other] == [("evaluation[1]", "changed")]
+    change = report.other[0]
+    assert (change.before["independent"], change.after["independent"]) == (False, True)
+
+
+def test_removed_item_is_reported(make_record: Make, policy: Policy) -> None:
+    report = diff_records(
+        make_record({"evaluation": _SAMPLES}),
+        make_record({"evaluation": [_SAMPLES[0], _SAMPLES[2]]}),
+        policy,
+    )
+    assert [(c.path, c.summary, c.before) for c in report.other] == [
+        ("evaluation[1]", "removed", "2026-02-01 human_review_sample: Sample 2.")
+    ]
+
+
 def test_flatten_keys_lists() -> None:
     flat = flatten({"risks": [{"id": "R1", "impact": 2}], "tags": ["b", "a"]})
     assert flat == {"risks[R1].id": "R1", "risks[R1].impact": 2, "tags": ("a", "b")}
