@@ -1,0 +1,199 @@
+# yaml-language-server: $schema=../schema/ai-use-record.schema.json
+#
+# FICTIONAL EXAMPLE, CURRENT VERSION. The earlier version is history/grant-triage.v1.yaml;
+# compare them with `aiak diff`. The organisation, scheme, people, dates and figures are
+# invented. They do not describe any real organisation or system.
+
+schema_version: "1.0"
+id: grant-application-triage
+title: Grant application triage
+version: "2"
+status: in_test
+organisation: Example Agency (fictional)
+
+summary: >-
+  A model scores incoming applications to a community grants scheme against the published
+  eligibility criteria and suggests an order for assessors to work in. Assessors review every
+  application; the model does not accept or reject any. Applicants now get an automatic
+  acknowledgement with an expected decision date.
+purpose: >-
+  Applications arrive in peaks and assessors work in date order, so clearly eligible,
+  time-sensitive applications can wait weeks. A suggested order should shorten those waits, and
+  an acknowledgement tells applicants when to expect a decision.
+benefits:
+  - Shorter waits for time-sensitive, clearly eligible applications.
+  - Applicants know when to expect a decision.
+alternatives_considered: >-
+  A rules-based checklist on the application form handles the hard eligibility criteria, such
+  as missing documents. The model is used only for ordering the remaining applications, which
+  depends on free-text answers.
+
+accountability:
+  business_owner: {role: Grants programme director, name: Taylor Sample}
+  builder: {role: Data scientist, name: Jamie Example, team: Analysis}
+  maintainer: {role: Analysis team lead, name: Robin Demo, team: Analysis}
+  assurer: {role: Analytical assurance reviewer, name: Avery Test}
+  approver: {role: Grants programme director, name: Taylor Sample}
+
+system:
+  description: >-
+    A text classifier trained on past applications and assessor outcomes. It gives each new
+    application an eligibility likelihood, an urgency flag and the main reasons for both.
+  model_kind: predictive
+  model: Gradient-boosted classifier over text features
+  provider: in-house
+  platform: Organisation analytics platform
+  hosting: organisation_cloud
+
+data:
+  categories:
+    - Application form answers
+    - Applicant organisation details, including contact names
+    - Past assessor outcomes
+    - Previous grant payments to the applicant
+  personal_data: true
+  special_category_data: false
+  sources:
+    - Grants application portal
+    - Past assessment records
+    - Finance system grant payments
+  retention: >-
+    Scores and reasons are kept with the case file under the scheme's retention schedule.
+    Training extracts are deleted after 12 months.
+  dpia:
+    status: required_in_progress
+    decided_by: Data Protection Officer
+    date: 2026-05-20
+
+access:
+  users: Grants assessors and their team leaders
+  connectors:
+    - name: Application portal export
+      system: Grants application portal
+      permissions: [read]
+      purpose: Read new applications each morning.
+    - name: Finance system extract
+      system: Finance system
+      permissions: [read]
+      purpose: Read previous grant payments to the applicant.
+    - name: Case management queue
+      system: Grants case management system
+      permissions: [read, write]
+      purpose: Write the suggested order and reasons onto each case.
+    - name: Applicant email
+      system: Notification service
+      permissions: [send]
+      purpose: Send each applicant an acknowledgement with an expected decision date.
+
+actions:
+  mode: autonomous
+  description: >-
+    Writes the suggested order and reasons onto each case, and emails each applicant an
+    acknowledgement with an expected decision date. Neither step waits for a person.
+  human_approval_step: null
+  recipients:
+    - Grants case management system
+    - Applicants
+  stop_mechanism: null
+
+reliance:
+  relied_on_by:
+    - Grants assessors
+    - Grants team leaders
+    - Applicants (expected decision date)
+  how_outputs_are_used: >-
+    To decide which applications assessors look at first. Every application is still assessed
+    in full by a person.
+  decision_role: decision_support
+  public_facing: false
+  public_effect: true
+  significant_influence: true
+  human_review: >-
+    Assessors review every application in full. The score and reasons are shown alongside, and
+    assessors record whether they agree with the suggested priority.
+  challenge_route: >-
+    Applicants can ask for a review of any funding decision through the scheme's published
+    complaints route.
+  user_notice: The acknowledgement email says the expected date is estimated automatically.
+  scale: {users: 25, uses_per_month: 1500}
+
+risks:
+  - id: R1
+    description: >-
+      The model ranks applications from some kinds of organisation lower because past
+      outcomes reflect past bias.
+    likelihood: 3
+    impact: 4
+    owner: Grants programme director
+    controls: [C1, C2]
+  - id: R2
+    description: Assessors defer to the suggested priority instead of forming their own view.
+    likelihood: 3
+    impact: 3
+    owner: Analysis team lead
+    controls: [C3]
+  - id: R3
+    description: An urgent application is flagged as not urgent and waits longer.
+    likelihood: 2
+    impact: 4
+    owner: Grants programme director
+    controls: [C2]
+  - id: R4
+    description: >-
+      An acknowledgement gives a wrong expected decision date, or goes to the wrong applicant.
+    likelihood: 3
+    impact: 4
+    owner: null
+    controls: []
+
+controls:
+  - id: C1
+    description: Review model performance across organisation types and regions before testing with assessors.
+    status: in_place
+    owner: Analytical assurance reviewer
+  - id: C2
+    description: Every application is still assessed in full by an assessor.
+    status: in_place
+    owner: Grants programme director
+  - id: C3
+    description: Assessors record agreement or disagreement with the suggested priority; the disagreement rate is reviewed monthly.
+    status: planned
+    owner: Analysis team lead
+
+evaluation:
+  - date: 2026-08-14
+    kind: offline_test_set
+    summary: >-
+      Offline test on held-out past applications, with assessor outcomes as labels and results
+      broken down by organisation type and region.
+    performed_by: Data scientist
+    independent: false
+  - date: 2026-09-05
+    kind: bias_review
+    summary: >-
+      The analytical assurance team re-ran the offline test and reviewed performance across
+      organisation types and regions (control C1).
+    performed_by: Analytical assurance reviewer
+    independent: true
+
+decisions:
+  - type: approve_build
+    date: 2026-06-03
+    by: Grants programme director
+    note: >-
+      Approved to build and test offline only. Connecting live application data and use by
+      assessors need separate decisions.
+  - type: connect_data
+    date: 2026-07-20
+    by: Data Protection Officer
+    note: Application portal export connected for offline testing.
+
+transparency:
+  atrs_determination: in_scope
+  rationale: >-
+    Treated as in scope because the suggested order influences when applicants get a decision.
+    An ATRS record will be drafted before the tool is used by assessors.
+
+review:
+  last_reviewed: 2026-09-10
+  next_review: 2026-12-01

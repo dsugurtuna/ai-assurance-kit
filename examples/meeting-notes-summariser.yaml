@@ -1,0 +1,183 @@
+# yaml-language-server: $schema=../schema/ai-use-record.schema.json
+#
+# FICTIONAL EXAMPLE. The organisation, people, dates and figures are invented to show how a
+# record is filled in. They do not describe any real organisation or system.
+
+schema_version: "1.0"
+id: meeting-notes-summariser
+title: Meeting notes summariser
+version: "3"
+status: live
+organisation: Example Agency (fictional)
+
+summary: >-
+  Staff can ask an AI assistant to turn the transcript of an internal meeting into draft notes
+  and a list of actions. The meeting chair edits and circulates the notes; nothing is sent
+  automatically.
+purpose: >-
+  Internal meetings are often left without notes, or with notes in different formats. The tool
+  gives the chair a first draft so that notes are produced soon after the meeting and in a
+  standard format.
+benefits:
+  - Chairs spend less total time on notes, counting the time spent checking and correcting drafts.
+  - Actions are recorded in one consistent format.
+alternatives_considered: >-
+  A shared notes template and a rota of note-takers were tried first. They helped for large
+  meetings but not for short ones. Transcripts on their own were also tried, but they were too
+  long for attendees to read.
+
+accountability:
+  business_owner: {role: Head of Corporate Services, name: Jordan Sample}
+  builder: {role: Digital team developer, name: Alex Example, team: Digital}
+  maintainer: {role: Digital service manager, name: Casey Demo, team: Digital}
+  assurer: {role: Data and AI assurance lead, name: Morgan Test}
+  approver: {role: Chief Information Officer}
+
+system:
+  description: >-
+    A general-purpose large language model inside the organisation's existing office software,
+    prompted with a fixed notes template.
+  model_kind: generative
+  model: General-purpose LLM (vendor-hosted)
+  provider: Office software vendor
+  platform: Organisation's office software tenant
+  hosting: vendor_saas
+  third_party_supplier: Office software vendor
+
+data:
+  categories:
+    - Meeting transcripts
+    - Attendee names and job titles
+    - Views expressed in meetings
+  personal_data: true
+  special_category_data: false
+  sources:
+    - Meeting transcription service
+  retention: >-
+    Transcripts are deleted after 30 days. Draft and final notes follow the organisation's
+    records policy.
+  dpia:
+    status: completed
+    reference: DPIA-EX-001 (fictional)
+    decided_by: Data Protection Officer
+    date: 2026-01-20
+
+access:
+  users: All staff, for meetings they chair
+  connectors:
+    - name: Transcription store
+      system: Meeting transcription service
+      permissions: [read]
+      purpose: Read the transcript of a meeting the user chaired.
+    - name: Drafts folder
+      system: The chair's own document folder
+      permissions: [read, write]
+      purpose: Save the draft notes for the chair to edit.
+
+actions:
+  mode: drafts
+  description: Writes draft notes and an actions list into the chair's own drafts folder.
+  human_approval_step: The chair reads, edits and circulates the notes themselves.
+  recipients:
+    - Meeting chair
+  stop_mechanism: >-
+    The digital service manager can switch the feature off for all users from the admin console.
+    Last tried during the pilot.
+
+reliance:
+  relied_on_by:
+    - Meeting chairs
+    - Attendees, once the chair circulates the notes
+  how_outputs_are_used: As the first draft of the record of an internal meeting.
+  decision_role: information_only
+  public_facing: false
+  public_effect: false
+  significant_influence: false
+  human_review: The chair checks the draft against their own recollection before circulating it.
+  challenge_route: Attendees can ask the chair to correct the circulated notes.
+  user_notice: 'Every draft starts with the line "AI-generated draft: check before circulating".'
+  scale: {users: 400, uses_per_month: 900}
+
+risks:
+  - id: R1
+    description: >-
+      A draft attributes a view or an action to the wrong person, and the chair circulates it
+      without noticing.
+    likelihood: 3
+    impact: 3
+    owner: Head of Corporate Services
+    controls: [C1, C2]
+  - id: R2
+    description: Sensitive discussion ends up in widely circulated notes.
+    likelihood: 2
+    impact: 4
+    owner: Head of Corporate Services
+    controls: [C3]
+  - id: R3
+    description: >-
+      Over time chairs stop checking drafts closely and circulate them as they are
+      (automation bias).
+    likelihood: 4
+    impact: 3
+    owner: Digital service manager
+    controls: [C1, C4]
+
+controls:
+  - id: C1
+    description: Drafts are labelled as AI-generated and open in edit mode; nothing is sent.
+    status: in_place
+    owner: Digital service manager
+  - id: C2
+    description: The template asks the model to quote the transcript line behind each action.
+    status: in_place
+    owner: Digital team developer
+  - id: C3
+    description: Guidance tells chairs not to use the tool for confidential personnel meetings.
+    status: in_place
+    owner: Head of Corporate Services
+  - id: C4
+    description: Quarterly check of a sample of circulated notes against the transcripts.
+    status: planned
+    owner: Data and AI assurance lead
+
+evaluation:
+  - date: 2026-02-27
+    kind: human_review_sample
+    summary: >-
+      Pilot: chairs compared drafts with their own notes for a sample of meetings, logging each
+      correction and the total time spent including checking.
+    performed_by: Digital team developer
+    independent: false
+  - date: 2026-03-20
+    kind: human_review_sample
+    summary: >-
+      The assurance lead checked a separate sample of drafts against the transcripts, looking
+      for misattributed views and invented actions.
+    performed_by: Data and AI assurance lead
+    independent: true
+  - date: 2026-06-30
+    kind: usage_metrics
+    summary: >-
+      Monthly use, and the share of drafts circulated with no edits (tracked as a warning sign
+      for R3, not as a measure of quality).
+    performed_by: Digital service manager
+
+decisions:
+  - type: approve_build
+    date: 2026-01-12
+    by: Chief Information Officer
+  - type: connect_data
+    date: 2026-01-25
+    by: Data Protection Officer
+    note: Transcription store connected after the DPIA was completed.
+  - type: go_live
+    date: 2026-04-01
+    by: Chief Information Officer
+
+transparency:
+  atrs_determination: out_of_scope
+  rationale: Internal use only; no interaction with the public and no influence on decisions with public effect.
+
+review:
+  last_reviewed: 2026-03-25
+  next_review: 2026-09-01

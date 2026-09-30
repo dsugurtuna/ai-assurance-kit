@@ -1,0 +1,161 @@
+# yaml-language-server: $schema=../schema/ai-use-record.schema.json
+#
+# FICTIONAL EXAMPLE. The organisation, service, people, dates and figures are invented to show
+# how a record is filled in. They do not describe any real organisation or system.
+
+schema_version: "1.0"
+id: service-helpline-chatbot
+title: Permit service helpline chatbot
+version: "2"
+status: in_test
+organisation: Example Agency (fictional)
+
+summary: >-
+  A chatbot on the agency's website answers common questions about applying for a business
+  permit, using only the agency's published guidance pages. Each answer links to its source
+  page, and the chatbot offers a callback from the helpline when it cannot help.
+purpose: >-
+  The helpline receives many repeat questions that published guidance already answers. The
+  chatbot aims to answer these at any time of day and free helpline staff for complex cases.
+benefits:
+  - Answers to routine questions outside helpline hours.
+  - More helpline time for complex cases.
+alternatives_considered: >-
+  The guidance pages were restructured and their search improved first, which reduced some
+  calls. A decision-tree FAQ was prototyped but could not cope with the range of ways people
+  phrase questions.
+
+accountability:
+  business_owner: {role: Head of Permits Service, name: Riley Placeholder}
+  builder: {role: Contact centre technology lead, name: Sam Mock}
+  maintainer: {role: Contact centre technology lead, name: Sam Mock}
+  assurer: {role: Contact centre technology lead (acting assurer), name: Sam Mock}
+  approver: null
+
+system:
+  description: >-
+    A retrieval-augmented chatbot: it searches the published guidance pages and asks a
+    general-purpose language model to answer only from the passages found.
+  model_kind: generative
+  model: General-purpose LLM (API)
+  provider: Model API vendor
+  platform: Agency cloud tenant
+  hosting: organisation_cloud
+  third_party_supplier: Chatbot platform supplier
+
+data:
+  categories:
+    - Published guidance pages
+    - Questions typed by members of the public
+    - Conversation logs
+  personal_data: true
+  special_category_data: false
+  sources:
+    - Agency website guidance pages
+    - Chat widget on the permits pages
+  retention: null
+  dpia:
+    status: required_in_progress
+    decided_by: Data Protection Officer
+    date: 2026-07-15
+
+access:
+  users: Members of the public visiting the permits pages
+  connectors:
+    - name: Guidance index
+      system: Search index of the published guidance pages
+      permissions: [read]
+    - name: Helpline handover
+      system: Contact centre callback queue
+      permissions: [read, write]
+      purpose: Create a callback request when a user asks to speak to a person.
+
+actions:
+  mode: writes_with_approval
+  description: >-
+    Answers questions in the chat window. When a user asks for a person, it drafts a callback
+    request for the contact centre queue.
+  human_approval_step: The user reviews and confirms the callback request before it is created.
+  recipients:
+    - Contact centre callback queue
+  stop_mechanism: >-
+    The chat widget can be switched off from the website content system; the page then shows
+    the helpline number instead.
+
+reliance:
+  relied_on_by:
+    - Members of the public applying for a permit
+  how_outputs_are_used: People use the answers to decide how to prepare their application.
+  decision_role: information_only
+  public_facing: true
+  public_effect: false
+  significant_influence: false
+  human_review: null
+  challenge_route: Users can rate any answer or ask for a callback.
+  user_notice: null
+  scale: {users: null, uses_per_month: 6000}
+
+risks:
+  - id: R1
+    description: >-
+      The chatbot gives a wrong or out-of-date answer, and someone submits an incomplete
+      application as a result.
+    likelihood: 3
+    impact: 4
+    owner: Head of Permits Service
+    controls: [C1, C2]
+  - id: R2
+    description: Prompt injection makes the chatbot produce offensive or off-topic content.
+    likelihood: 2
+    impact: 4
+    owner: null
+    controls: [C1]
+  - id: R3
+    description: >-
+      Users type personal details into the chat, and conversation logs keep them for longer
+      than needed.
+    likelihood: 4
+    impact: 3
+    owner: null
+    controls: [C3]
+
+controls:
+  - id: C1
+    description: Answers are restricted to retrieved guidance passages, and each answer links its source page.
+    status: in_place
+    owner: Contact centre technology lead
+  - id: C2
+    description: Helpline staff review a weekly sample of conversations.
+    status: planned
+    owner: Head of Permits Service
+  - id: C3
+    description: Common personal data patterns are masked before conversation logs are stored.
+    status: planned
+    owner: Contact centre technology lead
+
+evaluation:
+  - date: 2026-08-10
+    kind: red_team
+    summary: The build team tried prompt-injection and off-topic prompts against the test version.
+    performed_by: Contact centre technology lead
+    independent: false
+  - date: 2026-08-24
+    kind: model_graded
+    summary: >-
+      A second model graded the chatbot's answers to a set of anonymised past helpline
+      questions against the guidance pages.
+    performed_by: Contact centre technology lead
+    independent: false
+
+decisions:
+  - type: approve_build
+    date: 2026-05-02
+    by: Director of Operations
+    note: Approved to build and test with helpline staff. Public launch needs a separate decision.
+
+transparency:
+  atrs_determination: not_assessed
+
+review:
+  last_reviewed: 2026-08-01
+  next_review: 2026-10-31

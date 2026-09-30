@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="ai-assurance-kit 0.1.0">
+<title>Permit service helpline chatbot: AI assurance card</title>
+<style>
+  :root {
+    --ink: #1b1b1b; --muted: #4a4a4a; --paper: #ffffff; --rule: #b1b4b6; --panel: #f3f2f1;
+    --high: #8e1b0e; --high-bg: #fbe9e7; --warning: #6b4e00; --warning-bg: #fff4d6;
+    --info: #1d4f91; --info-bg: #e8f0fa; --link: #1d4f91;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #f0f0f0; --muted: #c8c8c8; --paper: #151515; --rule: #555; --panel: #232323;
+      --high: #ffb4a8; --high-bg: #3a1712; --warning: #ffd978; --warning-bg: #332700;
+      --info: #a9c7f0; --info-bg: #14253b; --link: #a9c7f0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width: 60rem; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; line-height: 1.2; }
+  h2 { font-size: 1.1rem; margin: 1.25rem 0 .5rem; padding-bottom: .2rem;
+    border-bottom: 2px solid var(--rule); }
+  p { margin: .4rem 0; }
+  a { color: var(--link); }
+  .disclaimer { border-left: 4px solid var(--warning); background: var(--warning-bg);
+    padding: .5rem .75rem; margin: .5rem 0 .75rem; font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin: 0; padding: 0;
+    list-style: none; color: var(--muted); }
+  .meta strong { color: var(--ink); }
+  .summary { font-size: 1.05rem; }
+  dl.glance { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; margin: 0;
+    border-top: 1px solid var(--rule); }
+  dl.glance dt, dl.glance dd { margin: 0; padding: .3rem .5rem; border-bottom: 1px solid var(--rule); }
+  dl.glance dt { font-weight: 600; background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; margin: .25rem 0; }
+  caption { text-align: left; font-weight: 600; padding: .25rem 0; }
+  th, td { text-align: left; vertical-align: top; padding: .3rem .5rem;
+    border-bottom: 1px solid var(--rule); }
+  th { background: var(--panel); }
+  .sev { display: inline-block; min-width: 4.5rem; padding: 0 .4rem; border-radius: .25rem;
+    font-weight: 700; text-transform: uppercase; font-size: .8rem; border: 1px solid currentColor; }
+  .sev-high { color: var(--high); background: var(--high-bg); }
+  .sev-warning { color: var(--warning); background: var(--warning-bg); }
+  .sev-info { color: var(--info); background: var(--info-bg); }
+  .level { background: var(--panel); padding: .6rem .75rem; border-left: 4px solid var(--info); }
+  .level p.name { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  ul.tight { margin: .25rem 0; padding-left: 1.25rem; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+  footer { margin-top: 1.5rem; padding-top: .5rem; border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: .85rem; }
+  @page { size: A4; margin: 12mm; }
+  @media print {
+    body { font-size: 9.5pt; background: #fff; color: #000; }
+    main { max-width: none; padding: 0; }
+    h2 { break-after: avoid; }
+    tr, dl.glance dt, dl.glance dd { break-inside: avoid; }
+    footer a[href^="http"]::after { content: " (" attr(href) ")"; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Permit service helpline chatbot</h1>
+  <p class="disclaimer">Unofficial. Not government guidance. Checks are prompts for human judgement, not verdicts.</p>
+  <ul class="meta">
+    <li><strong>Status:</strong> in test</li>
+    <li><strong>Record:</strong> <code>service-helpline-chatbot</code> v2</li>
+    <li><strong>Checked as at:</strong> <time datetime="2026-09-30">2026-09-30</time></li>
+    <li><strong>Next review:</strong> <time datetime="2026-10-31">2026-10-31</time></li>
+  </ul>
+  <p class="summary">A chatbot on the agency&#39;s website answers common questions about applying for a business permit, using only the agency&#39;s published guidance pages. Each answer links to its source page, and the chatbot offers a callback from the helpline when it cannot help.</p>
+</header>
+
+<section aria-labelledby="glance">
+  <h2 id="glance">At a glance</h2>
+  <dl class="glance">
+    <dt>Purpose</dt><dd>The helpline receives many repeat questions that published guidance already answers. The chatbot aims to answer these at any time of day and free helpline staff for complex cases.</dd>
+    <dt>Business owner</dt><dd>Head of Permits Service (Riley Placeholder)</dd>
+    <dt>Builder</dt><dd>Contact centre technology lead (Sam Mock)</dd>
+    <dt>Maintainer</dt><dd>Contact centre technology lead (Sam Mock)</dd>
+    <dt>Assurer</dt><dd>Contact centre technology lead (acting assurer) (Sam Mock)</dd>
+    <dt>Approver</dt><dd>not recorded</dd>
+    <dt>System</dt><dd>generative: General-purpose LLM (API) from Model API vendor, hosting organisation cloud, supplier Chatbot platform supplier</dd>
+    <dt>Data</dt><dd>Published guidance pages; Questions typed by members of the public; Conversation logs</dd>
+    <dt>Personal data</dt><dd>yes · DPIA: required in progress · retention: not recorded</dd>
+    <dt>Connectors</dt><dd>Guidance index (read); Helpline handover (read, write)</dd>
+    <dt>Actions</dt><dd>writes with approval: Answers questions in the chat window. When a user asks for a person, it drafts a callback request for the contact centre queue.</dd>
+    <dt>Human approval</dt><dd>The user reviews and confirms the callback request before it is created.</dd>
+    <dt>Relied on by</dt><dd>Members of the public applying for a permit (information only)</dd>
+    <dt>Public</dt><dd>public-facing: yes · public effect: no · significant influence: no</dd>
+    <dt>ATRS determination</dt><dd>not assessed</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="level">
+  <h2 id="level">Proportionality level</h2>
+  <div class="level">
+    <p class="name">Use-specific review</p>
+    <p>A reviewer outside the build team checks this use case before it goes live, with input from data protection, security or accessibility specialists as the reasons suggest.</p>
+    <p>Why this level (policy: Example policy (adapt before use)):</p>
+    <ul class="tight">
+      <li><strong>Use-specific review</strong>: Personal data is processed. (<code>personal_data = true</code>)</li>
+      <li><strong>Use-specific review</strong>: Members of the public interact with the system directly. (<code>public_facing = true</code>)</li>
+      <li><strong>Use-specific review</strong>: The system sends or writes on its own, not only drafts for a person. (<code>sends_or_writes = true</code>)</li>
+    </ul>
+  </div>
+</section>
+
+<section aria-labelledby="prompts">
+  <h2 id="prompts">Prompts for human judgement</h2>
+  <table>
+    <caption>2 high, 4 warning, 2 info. Prompts, not verdicts.</caption>
+    <thead><tr><th scope="col">Severity</th><th scope="col">Check</th><th scope="col">Prompt</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sev sev-high">high</span></td><td><code>AIAK-RISK-001</code> Risk above appetite with no owner</td><td>Risk R3 scores 4 x 3 = 12, above the policy appetite of 9, and has no owner. Name the role that owns it.</td></tr>
+      <tr><td><span class="sev sev-high">high</span></td><td><code>AIAK-ROLE-001</code> Builder and assurer appear to be the same person</td><td>Builder and assurer are both recorded as &#39;Sam Mock&#39;. Name an assurer who did not build it, or record why that is not possible and who accepts that.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-DATA-002</code> No retention period recorded for personal data</td><td>Record how long inputs, outputs and logs containing personal data are kept, and where.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-EVAL-003</code> Model-graded evidence without a human-checked sample</td><td>Quality evidence includes model grading but no human-checked sample or pilot. Add a sample checked by people with subject knowledge, and record how often they disagreed with the grader.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-RISK-002</code> Risk above appetite with no control in place</td><td>Risk R3 (12) is above appetite and no linked control is in place (planned: C3). Put a control in place, or record who accepts the risk.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-TRANS-001</code> ATRS: likely in scope, record the determination</td><td>The record says members of the public interact with it directly. If your organisation is covered by the ATRS mandatory scope, this tool is likely in scope. Record the determination (in scope or out of scope, and why) in transparency.atrs_determination.</td></tr>
+      <tr><td><span class="sev sev-info">info</span></td><td><code>AIAK-EVAL-004</code> No independent evaluation recorded</td><td>None of the recorded evaluations is marked independent. Record any done by someone outside the build team, or plan one.</td></tr>
+      <tr><td><span class="sev sev-info">info</span></td><td><code>AIAK-TRANS-002</code> Public-facing use with no user notice recorded</td><td>Record how members of the public are told that AI is involved and what it can and cannot do.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="risks">
+  <h2 id="risks">Risks</h2>
+  <table>
+    <caption>Scored likelihood x impact (1 to 5 each). Appetite: scores above 9.</caption>
+    <thead><tr><th scope="col">ID</th><th scope="col">Risk</th><th scope="col">L x I</th><th scope="col">Owner</th><th scope="col">Controls</th></tr></thead>
+    <tbody>
+      <tr><td>R1</td><td>The chatbot gives a wrong or out-of-date answer, and someone submits an incomplete application as a result.</td><td>3 x 4 = 12 <strong>(above)</strong></td><td>Head of Permits Service</td><td>C1 (in place), C2 (planned)</td></tr>
+      <tr><td>R3</td><td>Users type personal details into the chat, and conversation logs keep them for longer than needed.</td><td>4 x 3 = 12 <strong>(above)</strong></td><td>none</td><td>C3 (planned)</td></tr>
+      <tr><td>R2</td><td>Prompt injection makes the chatbot produce offensive or off-topic content.</td><td>2 x 4 = 8</td><td>none</td><td>C1 (in place)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="evidence">
+  <h2 id="evidence">Evidence and decisions</h2>
+  <ul class="tight">
+    <li><time datetime="2026-05-02">2026-05-02</time> · decision, approve build: by Director of Operations. Approved to build and test with helpline staff. Public launch needs a separate decision.</li>
+    <li><time datetime="2026-08-10">2026-08-10</time> · evidence, red team: The build team tried prompt-injection and off-topic prompts against the test version.</li>
+    <li><time datetime="2026-08-24">2026-08-24</time> · evidence, model graded: A second model graded the chatbot&#39;s answers to a set of anonymised past helpline questions against the guidance pages.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Sources behind the prompts above: <a href="https://www.gov.uk/government/publications/ai-playbook-for-the-uk-government">AI Playbook for the UK Government</a>; <a href="https://www.gov.uk/government/publications/algorithmic-transparency-recording-standard-mandatory-scope-and-exemptions-policy">ATRS mandatory scope and exemptions policy</a>; <a href="https://www.gov.uk/government/publications/guidance-for-organisations-using-the-algorithmic-transparency-recording-standard">Algorithmic Transparency Recording Standard (ATRS) guidance</a>; <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework (AI RMF 1.0, NIST AI 100-1)</a>; <a href="https://www.gov.uk/guidance/the-aqua-book">The AQuA Book</a>; <a href="https://www.gov.uk/government/publications/orange-book">The Orange Book: management of risk</a>; <a href="https://github.com/dsugurtuna/ai-assurance-kit/blob/main/docs/WHY.md">ai-assurance-kit design principle</a>. The kit is informed by these sources; it does not implement or certify against them.</p>
+  <p>Generated from <code>examples/service-chatbot.yaml</code> by ai-assurance-kit 0.1.0. Unofficial. Not government guidance. Checks are prompts for human judgement, not verdicts.</p>
+</footer>
+</main>
+</body>
+</html>

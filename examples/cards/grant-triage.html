@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="ai-assurance-kit 0.1.0">
+<title>Grant application triage: AI assurance card</title>
+<style>
+  :root {
+    --ink: #1b1b1b; --muted: #4a4a4a; --paper: #ffffff; --rule: #b1b4b6; --panel: #f3f2f1;
+    --high: #8e1b0e; --high-bg: #fbe9e7; --warning: #6b4e00; --warning-bg: #fff4d6;
+    --info: #1d4f91; --info-bg: #e8f0fa; --link: #1d4f91;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #f0f0f0; --muted: #c8c8c8; --paper: #151515; --rule: #555; --panel: #232323;
+      --high: #ffb4a8; --high-bg: #3a1712; --warning: #ffd978; --warning-bg: #332700;
+      --info: #a9c7f0; --info-bg: #14253b; --link: #a9c7f0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width: 60rem; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; line-height: 1.2; }
+  h2 { font-size: 1.1rem; margin: 1.25rem 0 .5rem; padding-bottom: .2rem;
+    border-bottom: 2px solid var(--rule); }
+  p { margin: .4rem 0; }
+  a { color: var(--link); }
+  .disclaimer { border-left: 4px solid var(--warning); background: var(--warning-bg);
+    padding: .5rem .75rem; margin: .5rem 0 .75rem; font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin: 0; padding: 0;
+    list-style: none; color: var(--muted); }
+  .meta strong { color: var(--ink); }
+  .summary { font-size: 1.05rem; }
+  dl.glance { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; margin: 0;
+    border-top: 1px solid var(--rule); }
+  dl.glance dt, dl.glance dd { margin: 0; padding: .3rem .5rem; border-bottom: 1px solid var(--rule); }
+  dl.glance dt { font-weight: 600; background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; margin: .25rem 0; }
+  caption { text-align: left; font-weight: 600; padding: .25rem 0; }
+  th, td { text-align: left; vertical-align: top; padding: .3rem .5rem;
+    border-bottom: 1px solid var(--rule); }
+  th { background: var(--panel); }
+  .sev { display: inline-block; min-width: 4.5rem; padding: 0 .4rem; border-radius: .25rem;
+    font-weight: 700; text-transform: uppercase; font-size: .8rem; border: 1px solid currentColor; }
+  .sev-high { color: var(--high); background: var(--high-bg); }
+  .sev-warning { color: var(--warning); background: var(--warning-bg); }
+  .sev-info { color: var(--info); background: var(--info-bg); }
+  .level { background: var(--panel); padding: .6rem .75rem; border-left: 4px solid var(--info); }
+  .level p.name { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  ul.tight { margin: .25rem 0; padding-left: 1.25rem; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+  footer { margin-top: 1.5rem; padding-top: .5rem; border-top: 1px solid var(--rule);
+    color: var(--muted); font-size: .85rem; }
+  @page { size: A4; margin: 12mm; }
+  @media print {
+    body { font-size: 9.5pt; background: #fff; color: #000; }
+    main { max-width: none; padding: 0; }
+    h2 { break-after: avoid; }
+    tr, dl.glance dt, dl.glance dd { break-inside: avoid; }
+    footer a[href^="http"]::after { content: " (" attr(href) ")"; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Grant application triage</h1>
+  <p class="disclaimer">Unofficial. Not government guidance. Checks are prompts for human judgement, not verdicts.</p>
+  <ul class="meta">
+    <li><strong>Status:</strong> in test</li>
+    <li><strong>Record:</strong> <code>grant-application-triage</code> v2</li>
+    <li><strong>Checked as at:</strong> <time datetime="2026-09-30">2026-09-30</time></li>
+    <li><strong>Next review:</strong> <time datetime="2026-12-01">2026-12-01</time></li>
+  </ul>
+  <p class="summary">A model scores incoming applications to a community grants scheme against the published eligibility criteria and suggests an order for assessors to work in. Assessors review every application; the model does not accept or reject any. Applicants now get an automatic acknowledgement with an expected decision date.</p>
+</header>
+
+<section aria-labelledby="glance">
+  <h2 id="glance">At a glance</h2>
+  <dl class="glance">
+    <dt>Purpose</dt><dd>Applications arrive in peaks and assessors work in date order, so clearly eligible, time-sensitive applications can wait weeks. A suggested order should shorten those waits, and an acknowledgement tells applicants when to expect a decision.</dd>
+    <dt>Business owner</dt><dd>Grants programme director (Taylor Sample)</dd>
+    <dt>Builder</dt><dd>Data scientist (Jamie Example)</dd>
+    <dt>Maintainer</dt><dd>Analysis team lead (Robin Demo)</dd>
+    <dt>Assurer</dt><dd>Analytical assurance reviewer (Avery Test)</dd>
+    <dt>Approver</dt><dd>Grants programme director (Taylor Sample)</dd>
+    <dt>System</dt><dd>predictive: Gradient-boosted classifier over text features from in-house, hosting organisation cloud</dd>
+    <dt>Data</dt><dd>Application form answers; Applicant organisation details, including contact names; Past assessor outcomes; Previous grant payments to the applicant</dd>
+    <dt>Personal data</dt><dd>yes · DPIA: required in progress · retention: Scores and reasons are kept with the case file under the scheme&#39;s retention schedule. Training extracts are deleted after 12 months.</dd>
+    <dt>Connectors</dt><dd>Application portal export (read); Finance system extract (read); Case management queue (read, write); Applicant email (send)</dd>
+    <dt>Actions</dt><dd>autonomous: Writes the suggested order and reasons onto each case, and emails each applicant an acknowledgement with an expected decision date. Neither step waits for a person.</dd>
+    <dt>Human approval</dt><dd>not recorded</dd>
+    <dt>Relied on by</dt><dd>Grants assessors; Grants team leaders; Applicants (expected decision date) (decision support)</dd>
+    <dt>Public</dt><dd>public-facing: no · public effect: yes · significant influence: yes</dd>
+    <dt>ATRS determination</dt><dd>in scope: Treated as in scope because the suggested order influences when applicants get a decision. An ATRS record will be drafted before the tool is used by assessors.</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="level">
+  <h2 id="level">Proportionality level</h2>
+  <div class="level">
+    <p class="name">Senior or specialist approval</p>
+    <p>A senior accountable owner approves the use after specialist review, and the approval is recorded as a separate go-live decision.</p>
+    <p>Why this level (policy: Example policy (adapt before use)):</p>
+    <ul class="tight">
+      <li><strong>Senior or specialist approval</strong>: Outputs significantly influence decisions that affect the public or organisations. (<code>significant_public_effect = true</code>)</li>
+      <li><strong>Senior or specialist approval</strong>: The system sends or writes without a person approving each action. (<code>action_mode = autonomous</code>)</li>
+      <li><strong>Use-specific review</strong>: Personal data is processed. (<code>personal_data = true</code>)</li>
+      <li><strong>Use-specific review</strong>: The system sends or writes on its own, not only drafts for a person. (<code>sends_or_writes = true</code>)</li>
+      <li><strong>Use-specific review</strong>: Outputs support decisions, so errors can shape outcomes. (<code>decision_role = decision_support</code>)</li>
+    </ul>
+  </div>
+</section>
+
+<section aria-labelledby="prompts">
+  <h2 id="prompts">Prompts for human judgement</h2>
+  <table>
+    <caption>2 high, 2 warning, 0 info. Prompts, not verdicts.</caption>
+    <thead><tr><th scope="col">Severity</th><th scope="col">Check</th><th scope="col">Prompt</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sev sev-high">high</span></td><td><code>AIAK-ACT-001</code> Sends or writes without a human approval step</td><td>The system sends or writes without a person approving each action. Record who decided that per-action approval is not needed, the limits that apply (what, to whom, how often) and how errors are noticed and reversed.</td></tr>
+      <tr><td><span class="sev sev-high">high</span></td><td><code>AIAK-RISK-001</code> Risk above appetite with no owner</td><td>Risk R4 scores 3 x 4 = 12, above the policy appetite of 9, and has no owner. Name the role that owns it.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-ACT-002</code> No way to stop the system is recorded</td><td>Record how the system can be paused or switched off quickly, who can do it, and when it was last tried.</td></tr>
+      <tr><td><span class="sev sev-warning">warning</span></td><td><code>AIAK-RISK-002</code> Risk above appetite with no control in place</td><td>Risk R4 (12) is above appetite and no linked control is in place (planned: none linked). Put a control in place, or record who accepts the risk.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="risks">
+  <h2 id="risks">Risks</h2>
+  <table>
+    <caption>Scored likelihood x impact (1 to 5 each). Appetite: scores above 9.</caption>
+    <thead><tr><th scope="col">ID</th><th scope="col">Risk</th><th scope="col">L x I</th><th scope="col">Owner</th><th scope="col">Controls</th></tr></thead>
+    <tbody>
+      <tr><td>R1</td><td>The model ranks applications from some kinds of organisation lower because past outcomes reflect past bias.</td><td>3 x 4 = 12 <strong>(above)</strong></td><td>Grants programme director</td><td>C1 (in place), C2 (in place)</td></tr>
+      <tr><td>R4</td><td>An acknowledgement gives a wrong expected decision date, or goes to the wrong applicant.</td><td>3 x 4 = 12 <strong>(above)</strong></td><td>none</td><td>none</td></tr>
+      <tr><td>R2</td><td>Assessors defer to the suggested priority instead of forming their own view.</td><td>3 x 3 = 9</td><td>Analysis team lead</td><td>C3 (planned)</td></tr>
+      <tr><td>R3</td><td>An urgent application is flagged as not urgent and waits longer.</td><td>2 x 4 = 8</td><td>Grants programme director</td><td>C2 (in place)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="evidence">
+  <h2 id="evidence">Evidence and decisions</h2>
+  <ul class="tight">
+    <li><time datetime="2026-06-03">2026-06-03</time> · decision, approve build: by Grants programme director. Approved to build and test offline only. Connecting live application data and use by assessors need separate decisions.</li>
+    <li><time datetime="2026-07-20">2026-07-20</time> · decision, connect data: by Data Protection Officer. Application portal export connected for offline testing.</li>
+    <li><time datetime="2026-08-14">2026-08-14</time> · evidence, offline test set: Offline test on held-out past applications, with assessor outcomes as labels and results broken down by organisation type and region.</li>
+    <li><time datetime="2026-09-05">2026-09-05</time> · evidence, bias review (independent): The analytical assurance team re-ran the offline test and reviewed performance across organisation types and regions (control C1).</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Sources behind the prompts above: <a href="https://www.gov.uk/government/publications/ai-playbook-for-the-uk-government">AI Playbook for the UK Government</a>; <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework (AI RMF 1.0, NIST AI 100-1)</a>; <a href="https://www.gov.uk/government/publications/orange-book">The Orange Book: management of risk</a>; <a href="https://github.com/dsugurtuna/ai-assurance-kit/blob/main/docs/WHY.md">ai-assurance-kit design principle</a>. The kit is informed by these sources; it does not implement or certify against them.</p>
+  <p>Generated from <code>examples/grant-triage.yaml</code> by ai-assurance-kit 0.1.0. Unofficial. Not government guidance. Checks are prompts for human judgement, not verdicts.</p>
+</footer>
+</main>
+</body>
+</html>
