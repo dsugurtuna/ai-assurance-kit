@@ -161,7 +161,8 @@ def test_bad_date_is_a_usage_error() -> None:
 def test_diff_outputs() -> None:
     code, out = run("diff", GRANT_V1, GRANT)
     assert code == 0
-    assert "Material changes (10): re-review suggested" in out
+    # 11 since v1 -> v2 also adds applicants to the groups relying on the outputs.
+    assert "Material changes (11): re-review suggested" in out
     code, out = run("diff", GRANT_V1, GRANT, "--format", "md")
     assert "## Material changes (re-review suggested)" in out
     code, out = run("diff", GRANT_V1, GRANT, "--format", "json")

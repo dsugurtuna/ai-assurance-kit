@@ -82,6 +82,75 @@ def test_material_changes(
     assert path in _material(make_record(), make_record(changes), policy)
 
 
+@pytest.mark.parametrize(
+    ("before", "after", "path"),
+    [
+        # More people rely on the outputs: who it affects and how much it is relied on.
+        (
+            {},
+            {"reliance.relied_on_by": ["Staff", "Members of the public"]},
+            "reliance.relied_on_by",
+        ),
+        # A different kind of model under the same product label.
+        ({}, {"system.model_kind": "predictive"}, "system.model_kind"),
+        # An existing connector now points at a different system.
+        (
+            {"access.connectors": [{"name": "Docs", "system": "Wiki", "permissions": ["read"]}]},
+            {
+                "access.connectors": [
+                    {"name": "Docs", "system": "HR system", "permissions": ["read"]}
+                ]
+            },
+            "access.connectors[Docs].system",
+        ),
+        # Safeguards removed, like the approval step and human review already are.
+        (
+            {"actions.stop_mechanism": "Admin switch."},
+            {"actions.stop_mechanism": None},
+            "actions.stop_mechanism",
+        ),
+        (
+            {"reliance.challenge_route": "Complaints route."},
+            {"reliance.challenge_route": None},
+            "reliance.challenge_route",
+        ),
+        (
+            {"reliance.user_notice": "Banner says AI is used."},
+            {"reliance.user_notice": None},
+            "reliance.user_notice",
+        ),
+    ],
+)
+def test_more_material_changes(
+    before: dict[str, Any], after: dict[str, Any], path: str, make_record: Make, policy: Policy
+) -> None:
+    old = make_record(before)
+    new = make_record({**before, **after})
+    assert path in _material(old, new, policy)
+
+
+@pytest.mark.parametrize(
+    ("before", "after"),
+    [
+        # Recording a connector's system for the first time is not a new connection.
+        (
+            {},
+            {"access.connectors": [{"name": "Docs", "system": "Wiki", "permissions": ["read"]}]},
+        ),
+        # A blank supplier is no supplier; the change is not material.
+        ({}, {"system.third_party_supplier": "  "}),
+        # Fewer groups relying on the outputs.
+        ({"reliance.relied_on_by": ["Staff", "Managers"]}, {"reliance.relied_on_by": ["Staff"]}),
+    ],
+)
+def test_more_changes_that_are_not_material(
+    before: dict[str, Any], after: dict[str, Any], make_record: Make, policy: Policy
+) -> None:
+    old = make_record(before)
+    new = make_record({**before, **after})
+    assert _material(old, new, policy) == []
+
+
 def test_status_to_live_is_material(make_record: Make, policy: Policy) -> None:
     old = make_record({"status": "in_test"})
     report = diff_records(old, make_record(), policy)

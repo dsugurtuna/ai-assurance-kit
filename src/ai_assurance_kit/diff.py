@@ -220,6 +220,17 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
                 )
             )
             continue
+        was_system, now_system = old_conns[conn.name].system, conn.system
+        if was_system and now_system and was_system.casefold() != now_system.casefold():
+            out.append(
+                Change(
+                    f"access.connectors[{conn.name}].system",
+                    f"Connector '{conn.name}' now connects to a different system",
+                    was_system,
+                    now_system,
+                    "Connecting a new system is a separate decision from building the tool.",
+                )
+            )
         before_perms = [p.value for p in old_conns[conn.name].permissions]
         after_perms = [p.value for p in conn.permissions]
         if gained := _added(before_perms, after_perms):
@@ -277,6 +288,16 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
                 "Removing an approval step removes a control.",
             )
         )
+    if old.actions.stop_mechanism and not new.actions.stop_mechanism:
+        out.append(
+            Change(
+                "actions.stop_mechanism",
+                "Way to stop the system removed",
+                old.actions.stop_mechanism,
+                None,
+                "Removing the way to pause or switch off the system removes a control.",
+            )
+        )
 
     # Reliance
     for name, label in (
@@ -318,6 +339,37 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
                 "Removing review removes a control.",
             )
         )
+    if old.reliance.challenge_route and not new.reliance.challenge_route:
+        out.append(
+            Change(
+                "reliance.challenge_route",
+                "Challenge route removed",
+                old.reliance.challenge_route,
+                None,
+                "Affected people no longer have a recorded way to question an outcome.",
+            )
+        )
+    if old.reliance.user_notice and not new.reliance.user_notice:
+        out.append(
+            Change(
+                "reliance.user_notice",
+                "User notice removed",
+                old.reliance.user_notice,
+                None,
+                "People may no longer be told that AI is involved.",
+            )
+        )
+    if groups := _added(old.reliance.relied_on_by, new.reliance.relied_on_by):
+        out.append(
+            Change(
+                "reliance.relied_on_by",
+                f"New groups relying on the outputs: {', '.join(groups)}",
+                old.reliance.relied_on_by,
+                new.reliance.relied_on_by,
+                "More people rely on the outputs, so an error reaches further.",
+                _only_additions(old.reliance.relied_on_by, new.reliance.relied_on_by),
+            )
+        )
     factor = policy.changes.scale_factor
     for name in ("users", "uses_per_month"):
         before = getattr(old.reliance.scale, name)
@@ -340,8 +392,9 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
             )
 
     # System
-    for name in ("model", "provider", "hosting", "third_party_supplier"):
-        before, after = getattr(old.system, name), getattr(new.system, name)
+    for name in ("model_kind", "model", "provider", "hosting", "third_party_supplier"):
+        # A blank answer is no answer: "" and None are the same here, as in the checks.
+        before, after = getattr(old.system, name) or None, getattr(new.system, name) or None
         if before != after:
             out.append(
                 Change(
