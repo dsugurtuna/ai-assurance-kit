@@ -207,3 +207,83 @@ def test_json_schema_rejects_unknown_field() -> None:
 
 def test_json_schema_is_a_valid_2020_12_schema() -> None:
     jsonschema.Draft202012Validator.check_schema(json_schema())
+
+
+def _mutated(path: str, value: Any) -> dict[str, Any]:
+    data = copy.deepcopy(CLEAN)
+    if path.startswith("risks[0]."):
+        data["risks"][0][path.removeprefix("risks[0].")] = value
+    elif path.startswith("evaluation[0]."):
+        data["evaluation"][0][path.removeprefix("evaluation[0].")] = value
+    else:
+        set_path(data, path, value)
+    return data
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        # Nonsense that pydantic's lax mode used to coerce: `likelihood: yes` became 1.
+        ("risks[0].likelihood", True),
+        ("risks[0].impact", "4"),
+        ("reliance.scale.users", True),
+        ("reliance.scale.uses_per_month", "100"),
+        ("data.personal_data", "no"),
+        ("data.personal_data", 1),
+        ("reliance.public_facing", "false"),
+        ("evaluation[0].independent", "yes"),
+        # A required list satisfied by an empty entry.
+        ("data.categories", [""]),
+        ("reliance.relied_on_by", [""]),
+        ("actions.recipients", ["Author", ""]),
+        ("benefits", [""]),
+        # Bounds must be enforced by both, not just exported as a keyword validators ignore.
+        ("reliance.scale.users", -1),
+        ("risks[0].likelihood", 0),
+        ("risks[0].impact", 6),
+        # Values both should accept.
+        ("risks[0].likelihood", 3),
+        ("reliance.scale.users", 0),
+        ("data.personal_data", False),
+    ],
+)
+def test_pydantic_and_json_schema_agree(path: str, value: Any) -> None:
+    # The JSON Schema is published so records can be validated without Python. Anything it
+    # rejects, `aiak validate` must reject too, and the other way round.
+    data = _mutated(path, value)
+    try:
+        parse_record(copy.deepcopy(data))
+        pydantic_accepts = True
+    except RecordError:
+        pydantic_accepts = False
+    schema_accepts = jsonschema.Draft202012Validator(json_schema()).is_valid(_as_json(data))
+    assert pydantic_accepts == schema_accepts, (path, value)
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        ("data.categories", [""]),
+        ("data.categories", ["  "]),
+        ("reliance.relied_on_by", [""]),
+        ("actions.recipients", ["Author", " "]),
+        ("data.sources", [""]),
+        ("benefits", [""]),
+    ],
+)
+def test_blank_list_entries_are_rejected(path: str, value: Any) -> None:
+    # "categories: ['']" would satisfy "at least one data category" while saying nothing.
+    assert any(p.startswith(path) for p in _problems({path: value}))
+    # JSON Schema cannot strip whitespace, but it can reject an empty entry.
+    json_value = _as_json(_mutated(path, [""]))
+    assert not jsonschema.Draft202012Validator(json_schema()).is_valid(json_value)
+
+
+def test_next_review_cannot_be_before_last_review() -> None:
+    problems = _problems({"review.last_reviewed": "2026-04-01", "review.next_review": "2026-03-01"})
+    assert any(p.startswith("review: next_review") for p in problems), problems
+
+
+def test_next_review_may_equal_last_review() -> None:
+    data = _mutated("review", {"last_reviewed": "2026-04-01", "next_review": "2026-04-01"})
+    assert parse_record(data).review.next_review is not None

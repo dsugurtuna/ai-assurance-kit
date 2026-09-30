@@ -16,11 +16,27 @@ from __future__ import annotations
 
 import datetime as dt
 from enum import StrEnum
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StrictBool, model_validator
 
 SCHEMA_VERSION = "1.0"
+
+
+def _whole_number_only(value: object) -> object:
+    # pydantic's lax mode would read `likelihood: yes` (YAML for true) as 1 and "4" as 4. The
+    # published JSON Schema rejects both, and a record should say what it means.
+    if isinstance(value, bool | str):
+        raise ValueError("Input should be a whole number, not true/false or quoted text")
+    return value
+
+
+# Types shared by the models below. The constraints also appear in the exported JSON Schema,
+# so `aiak validate` and a JSON Schema validator accept and reject the same values.
+WholeNumber = Annotated[int, BeforeValidator(_whole_number_only)]
+# The bound comes before the validator so that it exports as JSON Schema "minimum".
+Count = Annotated[int, Field(ge=0), BeforeValidator(_whole_number_only)]
+Text = Annotated[str, Field(min_length=1)]  # a list entry: "" would satisfy "at least one"
 
 
 class _Model(BaseModel):
@@ -187,10 +203,10 @@ class DPIA(_Model):
 
 
 class Data(_Model):
-    categories: list[str] = Field(min_length=1, description="Kinds of data the system uses.")
-    personal_data: bool
-    special_category_data: bool = False
-    sources: list[str] = Field(default_factory=list)
+    categories: list[Text] = Field(min_length=1, description="Kinds of data the system uses.")
+    personal_data: StrictBool
+    special_category_data: StrictBool = False
+    sources: list[Text] = Field(default_factory=list)
     retention: str | None = Field(
         default=None, description="How long inputs, outputs and logs are kept."
     )
@@ -232,7 +248,7 @@ class Actions(_Model):
     human_approval_step: str | None = Field(
         default=None, description="Who approves each send or write, and how."
     )
-    recipients: list[str] = Field(
+    recipients: list[Text] = Field(
         default_factory=list, description="Who receives what the system sends or writes."
     )
     stop_mechanism: str | None = Field(
@@ -241,19 +257,21 @@ class Actions(_Model):
 
 
 class Scale(_Model):
-    users: int | None = Field(default=None, ge=0)
-    uses_per_month: int | None = Field(default=None, ge=0)
+    users: Count | None = None
+    uses_per_month: Count | None = None
 
 
 class Reliance(_Model):
-    relied_on_by: list[str] = Field(min_length=1, description="Who relies on the outputs.")
+    relied_on_by: list[Text] = Field(min_length=1, description="Who relies on the outputs.")
     how_outputs_are_used: str = Field(min_length=1)
     decision_role: DecisionRole
-    public_facing: bool = Field(description="Members of the public interact with it directly.")
-    public_effect: bool = Field(
+    public_facing: StrictBool = Field(
+        description="Members of the public interact with it directly."
+    )
+    public_effect: StrictBool = Field(
         description="Outputs feed decisions that affect members of the public or organisations."
     )
-    significant_influence: bool = Field(
+    significant_influence: StrictBool = Field(
         default=False, description="Outputs significantly influence those decisions."
     )
     human_review: str | None = Field(
@@ -271,10 +289,10 @@ class Reliance(_Model):
 class Risk(_Model):
     id: str = Field(min_length=1)
     description: str = Field(min_length=1)
-    likelihood: int = Field(ge=1, le=5, description="1 (rare) to 5 (almost certain).")
-    impact: int = Field(ge=1, le=5, description="1 (minimal) to 5 (severe).")
+    likelihood: WholeNumber = Field(ge=1, le=5, description="1 (rare) to 5 (almost certain).")
+    impact: WholeNumber = Field(ge=1, le=5, description="1 (minimal) to 5 (severe).")
     owner: str | None = Field(default=None, description="Role that owns this risk.")
-    controls: list[str] = Field(default_factory=list, description="IDs of controls that treat it.")
+    controls: list[Text] = Field(default_factory=list, description="IDs of controls that treat it.")
 
     @property
     def score(self) -> int:
@@ -293,7 +311,9 @@ class Evidence(_Model):
     kind: EvidenceKind
     summary: str = Field(min_length=1)
     performed_by: str | None = Field(default=None, description="Role that did the evaluation.")
-    independent: bool = Field(default=False, description="Done by someone other than the builder.")
+    independent: StrictBool = Field(
+        default=False, description="Done by someone other than the builder."
+    )
     link: str | None = None
 
 
@@ -313,6 +333,14 @@ class Transparency(_Model):
 class Review(_Model):
     last_reviewed: dt.date | None = None
     next_review: dt.date | None = None
+
+    @model_validator(mode="after")
+    def _next_after_last(self) -> Review:
+        if self.last_reviewed and self.next_review and self.next_review < self.last_reviewed:
+            raise ValueError(
+                f"next_review ({self.next_review}) is before last_reviewed ({self.last_reviewed})"
+            )
+        return self
 
 
 # --------------------------------------------------------------------------- the record
@@ -343,7 +371,7 @@ class AIUseRecord(_Model):
         min_length=1, description="Two or three plain-English sentences for a general reader."
     )
     purpose: str = Field(min_length=1, description="The problem this solves and for whom.")
-    benefits: list[str] = Field(default_factory=list)
+    benefits: list[Text] = Field(default_factory=list)
     alternatives_considered: str | None = Field(
         default=None, description="Non-AI or simpler options considered, and why not chosen."
     )

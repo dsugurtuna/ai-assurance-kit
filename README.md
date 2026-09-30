@@ -102,6 +102,8 @@ Validate records without Python, with any JSON Schema (2020-12) validator. For e
 check-jsonschema --schemafile schema/ai-use-record.schema.json examples/*.yaml
 ```
 
+The JSON Schema covers fields, types, allowed values and bounds, and tests check that it accepts and rejects the same values as `aiak validate`. A few rules need more than JSON Schema can express, so only `aiak validate` applies them: risks may only refer to controls that exist; risk IDs, control IDs and connector names must be unique; special category data implies personal data; the next review cannot fall before the last one; and text made only of spaces counts as empty.
+
 ## What is on the card
 
 One page, in this order, as Markdown or as a standalone HTML file with no scripts and no external resources:

@@ -129,6 +129,7 @@
         "recipients": {
           "description": "Who receives what the system sends or writes.",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "title": "Recipients",
@@ -314,6 +315,7 @@
         "categories": {
           "description": "Kinds of data the system uses.",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "minItems": 1,
@@ -331,6 +333,7 @@
         },
         "sources": {
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "title": "Sources",
@@ -574,6 +577,7 @@
         "relied_on_by": {
           "description": "Who relies on the outputs.",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "minItems": 1,
@@ -733,6 +737,7 @@
         "controls": {
           "description": "IDs of controls that treat it.",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "title": "Controls",
@@ -948,6 +953,7 @@
     },
     "benefits": {
       "items": {
+        "minLength": 1,
         "type": "string"
       },
       "title": "Benefits",
