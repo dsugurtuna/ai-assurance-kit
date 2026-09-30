@@ -146,6 +146,55 @@ def test_material_paths_are_not_repeated_in_other(make_record: Make, policy: Pol
     assert not any(c.path.startswith("access.connectors[CRM]") for c in report.other)
 
 
+def test_material_change_does_not_hide_other_edits_to_the_same_risk(
+    make_record: Make, policy: Policy
+) -> None:
+    # R1 rises above appetite and, in the same edit, loses its owner and its control. The
+    # material change explains the score; the owner and control edits must still be shown.
+    new = make_record(
+        {
+            "risks": [
+                {
+                    "id": "R1",
+                    "description": "Wrong draft.",
+                    "likelihood": 4,
+                    "impact": 4,
+                    "owner": None,
+                    "controls": [],
+                }
+            ]
+        }
+    )
+    report = diff_records(make_record(), new, policy)
+    assert [c.path for c in report.material] == ["risks[R1]"]
+    other = {c.path: c for c in report.other}
+    assert other["risks[R1].owner"].summary == "cleared"
+    assert other["risks[R1].controls"].after == []
+    assert "risks[R1].likelihood" not in other  # explained by the material change
+
+
+@pytest.mark.parametrize(
+    ("changes", "path"),
+    [
+        ({"data.categories": ["Health records"]}, "data.categories"),
+        ({"data.sources": ["CRM"]}, "data.sources"),
+        ({"actions.recipients": ["Customers"]}, "actions.recipients"),
+        (
+            {"access.connectors": [{"name": "Docs", "permissions": ["write"]}]},
+            "access.connectors[Docs].permissions",
+        ),
+    ],
+)
+def test_additions_do_not_hide_removals(
+    changes: dict[str, Any], path: str, make_record: Make, policy: Policy
+) -> None:
+    # Something was added (material) and something was removed in the same edit. The removal
+    # is not explained by the material summary, so the field must also appear under "other".
+    report = diff_records(make_record(), make_record(changes), policy)
+    assert path in [c.path for c in report.material]
+    assert path in [c.path for c in report.other]
+
+
 def test_added_list_items_read_as_one_change(make_record: Make, policy: Policy) -> None:
     extra = {"date": "2026-05-01", "kind": "pilot", "summary": "Pilot."}
     new = make_record({"evaluation": [*CLEAN["evaluation"], extra]})

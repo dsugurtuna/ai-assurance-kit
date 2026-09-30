@@ -33,6 +33,10 @@ class Change:
     before: Any = None
     after: Any = None
     reason: str = ""
+    # Generic field paths this material change fully explains, so they are not repeated under
+    # "other". None means the change's own path and everything below it. A material change
+    # never hides an edit it does not describe, such as a removal next to an addition.
+    covers: tuple[str, ...] | None = field(default=None, compare=False)
 
     def describe(self) -> str:
         """The summary, plus before and after when both are short enough to read inline."""
@@ -151,6 +155,11 @@ def _added(old: list[str], new: list[str]) -> list[str]:
     return [s for s in new if s.casefold() not in seen]
 
 
+def _only_additions(old: list[str], new: list[str]) -> tuple[str, ...] | None:
+    """Cover the whole field only when nothing was removed from it; otherwise cover nothing."""
+    return None if not _added(new, old) else ()
+
+
 def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list[Change]:
     out: list[Change] = []
 
@@ -160,7 +169,10 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
             Change(
                 "data.categories",
                 f"New data categories: {', '.join(cats)}",
-                reason="New kinds of data change what can go wrong and who is affected.",
+                old.data.categories,
+                new.data.categories,
+                "New kinds of data change what can go wrong and who is affected.",
+                _only_additions(old.data.categories, new.data.categories),
             )
         )
     if not old.data.personal_data and new.data.personal_data:
@@ -188,7 +200,10 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
             Change(
                 "data.sources",
                 f"New data sources: {', '.join(srcs)}",
-                reason="New sources can change data quality, lawful basis and security exposure.",
+                old.data.sources,
+                new.data.sources,
+                "New sources can change data quality, lawful basis and security exposure.",
+                _only_additions(old.data.sources, new.data.sources),
             )
         )
 
@@ -205,15 +220,17 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
                 )
             )
             continue
-        gained = [p.value for p in conn.permissions if p not in old_conns[conn.name].permissions]
-        if gained:
+        before_perms = [p.value for p in old_conns[conn.name].permissions]
+        after_perms = [p.value for p in conn.permissions]
+        if gained := _added(before_perms, after_perms):
             out.append(
                 Change(
                     f"access.connectors[{conn.name}].permissions",
                     f"Connector '{conn.name}' gains {', '.join(gained)} permission",
-                    [p.value for p in old_conns[conn.name].permissions],
-                    [p.value for p in conn.permissions],
+                    before_perms,
+                    after_perms,
                     "New permissions change what the system can do, whether or not it does it.",
+                    _only_additions(before_perms, after_perms),
                 )
             )
     if old.access.users != new.access.users:
@@ -244,7 +261,10 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
             Change(
                 "actions.recipients",
                 f"New recipients: {', '.join(rec)}",
-                reason="New recipients are new people or systems affected when an action is wrong.",
+                old.actions.recipients,
+                new.actions.recipients,
+                "New recipients are new people or systems affected when an action is wrong.",
+                _only_additions(old.actions.recipients, new.actions.recipients),
             )
         )
     if old.actions.human_approval_step and not new.actions.human_approval_step:
@@ -352,13 +372,19 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
     for r in new.risks:
         was = old_scores.get(r.id)
         if r.score > appetite and (was is None or was <= appetite):
+            path = f"risks[{r.id}]"
             out.append(
                 Change(
-                    f"risks[{r.id}]",
-                    f"Risk {r.id} is now above appetite ({r.score} > {appetite})",
+                    path,
+                    f"New risk {r.id} is above appetite ({r.score} > {appetite})"
+                    if was is None
+                    else f"Risk {r.id} is now above appetite ({r.score} > {appetite})",
                     was,
                     r.score,
                     "A risk above appetite needs an owner and a treatment decision.",
+                    # A new risk is covered whole, like a new connector. For an existing risk
+                    # only the score is explained; owner or control edits still show.
+                    None if was is None else (f"{path}.likelihood", f"{path}.impact"),
                 )
             )
     return out
@@ -373,7 +399,7 @@ def diff_records(
 ) -> DiffReport:
     """Compare two records. Material changes first; everything else under ``other``."""
     material = material_changes(old, new, policy)
-    covered = [m.path for m in material]
+    covered = [p for m in material for p in (m.covers if m.covers is not None else (m.path,))]
 
     def is_covered(path: str) -> bool:
         return any(path == c or path.startswith((c + ".", c + "[")) for c in covered)
