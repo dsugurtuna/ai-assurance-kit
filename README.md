@@ -168,7 +168,7 @@ The reasoning behind each choice, and the hard questions it raises, are in [docs
 - **Risk scores are ordinal.** Likelihood x impact on 1 to 5 scales is familiar and coarse. The kit shows the score, the owner and the controls so the number is not the whole story.
 - **One record per use case.** Systems with several models or very different deployment contexts may need several records.
 - **Some UK-specific prompts.** `AIAK-TRANS-001` (ATRS) matters mainly to UK public sector bodies; disable it in your policy if it does not apply, preferably after recording why.
-- **Source checking had limits.** GOV.UK, ICO and NIST websites could not be reached from the environment this was built in, so some sources were checked through official copies on GitHub or only by search. [docs/SOURCES.md](docs/SOURCES.md) says which.
+- **Guidance changes over time.** Primary UK GOV.UK, ICO and NIST sources were verified directly in November 2026 (see [docs/SOURCES.md](docs/SOURCES.md)), but statutory and departmental guidance evolves — re-check against the live primary sources before relying on any prompt in a formal review.
 
 ## Roadmap
 

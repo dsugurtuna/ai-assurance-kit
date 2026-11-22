@@ -158,7 +158,7 @@ Sources:
 
 **Builder and assurer appear to be the same person** (severity: high; skipped when status is: retired)
 
-Why: The AQuA Book, which this kit borrows its roles from, keeps the analyst and assurer roles separate: the analyst assures their own work, and formal assurance comes from someone else. (Checked against the final pre-publication draft of its second edition, not the published edition.) The kit treats the builder as the analyst role.
+Why: The AQuA Book, which this kit borrows its roles from, keeps the analyst and assurer roles separate: the analyst assures their own work, and formal assurance comes from someone else. The kit treats the builder as the analyst role.
 
 Sources:
 

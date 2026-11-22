@@ -36,7 +36,7 @@ ATRS sections are those of ATRS v4.0: Tier 1 ("Summary Information") is written 
 
 ## AQuA Book roles
 
-The AQuA Book defines four roles for analytical quality assurance: commissioner, analyst, assurer and approver, and keeps the analyst and assurer roles separate. (This was checked against the final pre-publication draft of the second edition, not the published GOV.UK edition; see [SOURCES.md](SOURCES.md#the-aqua-book).) The kit borrows that structure for AI use cases:
+The AQuA Book defines four roles for analytical quality assurance: commissioner, analyst, assurer and approver, and keeps the analyst and assurer roles separate (see [SOURCES.md](SOURCES.md#the-aqua-book)). The kit borrows that structure for AI use cases:
 
 | Kit role | Nearest AQuA Book role | Why the kit adds or changes it |
 |---|---|---|

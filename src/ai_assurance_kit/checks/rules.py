@@ -311,8 +311,7 @@ def no_user_notice(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     Severity.high,
     """The AQuA Book, which this kit borrows its roles from, keeps the analyst and assurer roles
     separate: the analyst assures their own work, and formal assurance comes from someone else.
-    (Checked against the final pre-publication draft of its second edition, not the published
-    edition.) The kit treats the builder as the analyst role.""",
+    The kit treats the builder as the analyst role.""",
     refs=[Ref("aqua-book", "Roles and responsibilities"), nist("MEASURE 1.3")],
 )
 def builder_is_assurer(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
