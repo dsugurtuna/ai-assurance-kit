@@ -1,0 +1,152 @@
+# yaml-language-server: $schema=../../schema/ai-use-record.schema.json
+#
+# Adapted from the published GOV.UK Algorithmic Transparency Record:
+#   URL: https://www.gov.uk/algorithmic-transparency-records/cabinet-office-assist
+#   GOV.UK public_updated_at: 2026-07-30
+# Note: Only facts published in the Tier 1 / Tier 2 GOV.UK record are recorded here.
+
+schema_version: "1.0"
+id: cabinet-office-assist
+title: Cabinet Office Assist
+version: "2"
+status: live
+organisation: Cabinet Office, Government Communications
+
+summary: >-
+  Conversational generative AI assistant with optional retrieval-augmented generation (RAG) over
+  Government Communications guidance and GOV.UK Search, helping government communicators brainstorm
+  ideas, create first drafts, and review work. Not designed for automated decision-making.
+purpose: >-
+  Improve efficiency and consistency across government communications by anchoring drafts in
+  published GCS frameworks, policies, and accessible communication standards.
+benefits:
+  - User research indicates Assist saves users around 3 hours per week on average.
+  - 98% of surveyed users report Assist helps perform their communications role and adhere to standards.
+  - Builds practical AI capability across the communications profession through mandatory onboarding.
+alternatives_considered: >-
+  Alpha phase compared OpenAI GPT-3.5, GPT-4, and Anthropic Claude 2.1 using user feedback and
+  head-to-head quality-versus-cost comparison before selecting Anthropic models via AWS Bedrock.
+
+accountability:
+  business_owner:
+    role: Head of GCS AI Products
+  builder:
+    role: Applied Data and Insight
+    team: Cabinet Office, Government Communications
+  maintainer:
+    role: Applied Data and Insight
+    team: Cabinet Office, Government Communications
+
+system:
+  description: >-
+    Connect Laravel web application and separate Assist API invoking Anthropic Claude models on AWS
+    Bedrock with optional RAG over curated GCS guidance and GOV.UK Search API.
+  model_kind: generative
+  model: Anthropic Claude Sonnet 5 (core) and Haiku 4.5 (background)
+  provider: Anthropic via AWS Bedrock escrow setup
+  platform: Amazon Web Services (AWS)
+  hosting: organisation_cloud
+  third_party_supplier: Westminster Heritage Limited; Numswork; Mondo Rosso; Happysoft
+
+data:
+  categories:
+    - Natural language queries and uploaded working documents (PDF, DOCX, TXT, HTML, PPTX, ODT)
+    - Government Communications policy library and GOV.UK public search snippets
+  personal_data: false
+  special_category_data: false
+  sources:
+    - Modern Communications Operating Model 3.0 and GCS guidance documents
+    - GDS GOV.UK Search API
+  retention: >-
+    AWS Bedrock escrow arrangement ensures Anthropic receives no user prompts or outputs and no data
+    is used for third-party model training.
+  dpia:
+    status: completed
+    decided_by: Data Protection Impact Assessment
+    date: 2024-06-24
+
+access:
+  users: Members of the UK government communications profession after onboarding training (~8,500 eligible)
+  connectors:
+    - name: GCS RAG Knowledge Library
+      system: Curated Government Communications guidance corpus
+      permissions: [read]
+      purpose: Retrieve relevant GCS frameworks and cite sources when RAG is enabled.
+    - name: GOV.UK Search API
+      system: Government Digital Service search index
+      permissions: [read]
+      purpose: Supplement responses with live published GOV.UK guidance.
+
+actions:
+  mode: drafts
+  description: >-
+    Returns markdown text responses only (with citations when RAG is enabled); users decide how to
+    edit or apply outputs.
+  human_approval_step: User remains responsible for reviewing, reprompting, and approving any onward use.
+  recipients:
+    - Authenticated government communicator user only
+
+reliance:
+  relied_on_by:
+    - Government communications professionals using Connect / Assist
+  how_outputs_are_used: Co-pilot for brainstorming, initial drafts, and reviewing communications text.
+  decision_role: information_only
+  public_facing: false
+  public_effect: false
+  significant_influence: false
+  human_review: Users review cited sources and edit all outputs before any external communications use.
+  scale:
+    users: 8500
+
+risks:
+  - id: R1
+    description: Average-quality or inaccurate outputs and task-tool mismatch or human overreliance.
+    likelihood: 3
+    impact: 3
+    owner: Applied Data and Insight
+    controls: [C1, C2]
+  - id: R2
+    description: Cyber security and accessibility regressions in production web application.
+    likelihood: 2
+    impact: 4
+    owner: Applied Data and Insight
+    controls: [C3]
+
+controls:
+  - id: C1
+    description: Mandatory 'Assist onboarding course' and 'AI for Communicators' training on hallucination, bias, and human-in-the-loop checks.
+    status: in_place
+    owner: Head of GCS AI Products
+  - id: C2
+    description: Opt-in curated RAG citations plus AWS Bedrock zero-training data isolation.
+    status: in_place
+    owner: Applied Data and Insight
+  - id: C3
+    description: Ongoing CHECK penetration testing and Digital Accessibility Audits.
+    status: in_place
+    owner: Applied Data and Insight
+
+evaluation:
+  - date: 2026-07-30
+    kind: user_research
+    summary: User survey reported c. 3 hours/week time saving and 98% usefulness across GCS users.
+    performed_by: Applied Data and Insight
+  - date: 2026-07-30
+    kind: security_review
+    summary: Regular CHECK penetration testing and Digital Accessibility Audits recorded in ATRS.
+    performed_by: Independent security & accessibility testers
+    independent: true
+
+decisions:
+  - type: go_live
+    date: 2024-06-24
+    by: Cabinet Office, Government Communications
+    note: Production status and June 2024 DPIA recorded in published ATRS submission.
+
+transparency:
+  atrs_determination: in_scope
+  rationale: Published voluntarily / under government transparency on GOV.UK ATRS repository.
+  record_url: https://www.gov.uk/algorithmic-transparency-records/cabinet-office-assist
+
+review:
+  last_reviewed: 2026-07-30

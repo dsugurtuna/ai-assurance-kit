@@ -1,0 +1,127 @@
+# yaml-language-server: $schema=../../schema/ai-use-record.schema.json
+#
+# Adapted from the published GOV.UK Algorithmic Transparency Record:
+#   URL: https://www.gov.uk/algorithmic-transparency-records/care-quality-commission-risk-categorisation
+#   GOV.UK public_updated_at: 2026-03-30
+# Note: Only facts published in the Tier 1 / Tier 2 GOV.UK record are recorded here.
+
+schema_version: "1.0"
+id: cqc-risk-categorisation
+title: CQC Risk Categorisation
+version: "3.0"
+status: live
+organisation: Care Quality Commission (CQC)
+
+summary: >-
+  Rules-based Power BI scoring model producing monthly Medium, High, and Very High risk categories
+  across regulated health and adult social care services to help CQC operational staff prioritise
+  assessment activity alongside local insight.
+purpose: >-
+  Provide a consistent, transparent monthly prioritisation signal across sectors for identifying
+  services at elevated risk of delivering poor quality care.
+benefits:
+  - Combines sector-specific risk models with consistent cross-sector rating age rules.
+  - Helps inspectors target finite assessment capacity toward higher-risk services.
+alternatives_considered: >-
+  A machine learning model for care-home inspection prioritisation is reported in development but
+  had not entered production at the date of the published ATRS record.
+
+accountability:
+  business_owner:
+    role: Deputy Director, Data and Insight
+  builder:
+    role: Data and Insight
+    team: Care Quality Commission Data and Insight
+
+system:
+  description: >-
+    Power BI model combining upstream sector risk model outputs (ASC, General Practice, Independent
+    Health, Urgent & Emergency Care), rating history, and registration rules across five tables.
+  model_kind: rules_based
+  model: Risk Categorisation rules model v3.0
+  provider: in-house
+  platform: CQC iHub2, Enterprise Data Platform, Power BI, and Microsoft Dynamics 365 Regulatory Platform
+  hosting: organisation_cloud
+
+data:
+  categories:
+    - CQC registration records and assessment service group (ASG) ratings history
+    - Statutory notifications, whistleblower disclosures, safeguarding alerts, and Give Feedback on Care reports
+    - Partner body indicators from NHS England under formal Data Sharing Agreement
+  personal_data: false
+  special_category_data: false
+  sources:
+    - CQC iHub2 and Enterprise Data Platform
+    - Regulatory Platform cases and NHS England partner extracts
+  # ATRS 4.4.4 notes retention schedule is under development as part of annual asset register review.
+  dpia:
+    status: screened_not_required
+    decided_by: CQC Information Access colleagues
+
+access:
+  users: CQC operational inspection staff via Dynamics 365 Regulatory Platform
+  connectors:
+    - name: iHub2 and EDP extracts
+      system: CQC Enterprise Data Platform
+      permissions: [read]
+      purpose: Read upstream sector risk indicators, ratings, and statutory notifications monthly.
+    - name: Regulatory Platform upload
+      system: Microsoft Dynamics 365 Regulatory Platform
+      permissions: [write]
+      purpose: Surface monthly risk category scores and driver tables on Overview and Data & Insight tabs.
+
+actions:
+  mode: read_only
+  description: >-
+    Displays monthly risk scores and underlying data drivers on internal inspection dashboards; does
+    not schedule inspections or publish ratings automatically.
+  recipients:
+    - CQC inspectors and operational assessment teams
+
+reliance:
+  relied_on_by:
+    - CQC operational inspectors
+  how_outputs_are_used: Prioritises inspection and assessment planning alongside local operational insight.
+  decision_role: decision_support
+  public_facing: false
+  public_effect: true
+  significant_influence: false
+  human_review: >-
+    Monthly QA verification of all rules before loading to Dynamics 365; inspectors review drivers
+    and may override scores using local insight.
+  scale:
+    uses_per_month: 46000
+
+risks:
+  - id: R1
+    description: Inspectors do not rely on or apply the risk categorisation outputs consistently in assessment planning.
+    likelihood: 3
+    impact: 3
+    owner: Data and Insight
+    controls: [C1]
+
+controls:
+  - id: C1
+    description: Product Campuses, written Word/PDF guidance, FAQ, query channel, and monthly QA checks prior to load.
+    status: in_place
+    owner: Data and Insight
+
+evaluation:
+  - date: 2026-03-30
+    kind: offline_test_set
+    summary: Monthly output checked against inspection ratings issued and monitored against inspector feedback.
+    performed_by: Data and Insight
+
+decisions:
+  - type: go_live
+    date: 2023-11-01
+    by: Care Quality Commission Data and Insight
+    note: ATRS 4.4.4 notes monthly risk category outputs have been produced since November 2023.
+
+transparency:
+  atrs_determination: in_scope
+  rationale: Published on GOV.UK ATRS repository.
+  record_url: https://www.gov.uk/algorithmic-transparency-records/care-quality-commission-risk-categorisation
+
+review:
+  last_reviewed: 2026-03-30

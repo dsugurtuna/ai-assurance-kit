@@ -18,7 +18,8 @@ The questions a reviewer needs answered are usually short. Who owns it? What dat
 - **Proportionality levels** computed from named record features under a policy file, with every reason shown. The bundled policy (standard / use-specific review / senior or specialist approval) is an **example to adapt**, not a recommendation.
 - **Change review.** `aiak diff` compares two versions of a record and flags material changes that should trigger re-review: new data, new connectors or permissions, new recipients or groups relying on the outputs, a move from drafts to autonomous sends, a removed safeguard (approval step, human review, stop mechanism, challenge route, user notice), a rise in scale, a new model, going live.
 - **Outputs people will read.** A one-page card in Markdown or standalone, print-ready, accessible HTML, and a portfolio register in CSV or Markdown.
-- **A crosswalk** from record fields and checks to the AI Playbook principles, ATRS sections and NIST AI RMF functions: [docs/CROSSWALK.md](docs/CROSSWALK.md).
+- **A crosswalk** from record fields and checks to the AI Playbook principles, ATRS sections, NIST AI RMF functions, and indicative **EU AI Act (Regulation (EU) 2024/1689)** / **ISO/IEC 42001:2023** governance structures: [docs/CROSSWALK.md](docs/CROSSWALK.md).
+- **Published ATRS adaptations** alongside the fictional walkthrough examples: three real public GOV.UK records (Ofsted, Cabinet Office Assist, CQC) in [examples/published-atrs/](examples/published-atrs/).
 
 ## Quickstart
 

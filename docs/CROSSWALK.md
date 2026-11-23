@@ -1,6 +1,6 @@
 # Crosswalk
 
-Unofficial; not government guidance. This page maps the kit's record fields and checks to the AI Playbook for the UK Government, the Algorithmic Transparency Recording Standard (ATRS), the AQuA Book roles and the NIST AI Risk Management Framework (AI RMF 1.0).
+Unofficial; not government guidance. This page maps the kit's record fields and checks to the AI Playbook for the UK Government, the Algorithmic Transparency Recording Standard (ATRS), the AQuA Book roles, the NIST AI Risk Management Framework (AI RMF 1.0), and high-level obligations in the **EU AI Act (Regulation (EU) 2024/1689)** and **ISO/IEC 42001:2023**.
 
 The mapping is the project's own judgement about where each field or check is *relevant*. It is not an official mapping, and a row here does not mean the kit implements or satisfies the item it points to. How each source was checked is in [SOURCES.md](SOURCES.md).
 
@@ -110,3 +110,32 @@ The four functions of the [NIST AI RMF 1.0](https://www.nist.gov/itl/ai-risk-man
 | MANAGE | Risks are prioritized and acted upon based on a projected impact. |
 
 The subcategories cited by the checks, with their text, are in `NIST_SUBCATEGORIES` in [`src/ai_assurance_kit/sources.py`](../src/ai_assurance_kit/sources.py).
+
+## EU AI Act (Regulation (EU) 2024/1689)
+
+Indicative orientation mapping to [Regulation (EU) 2024/1689 on EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689). This kit does not determine EU AI Act risk classification or establish legal conformity; legal teams decide applicability.
+
+| Record field / check area | Relevant EU AI Act articles | Governance question prompted |
+|---|---|---|
+| `purpose`, `reliance.*`, proportionality policy | Title III / Annex III scoping context; Art. 27 (Fundamental rights impact assessment context) | Could this use fall within high-risk deployment categories affecting fundamental rights or public services? |
+| `risks`, `controls`, `review.*` | Art. 9 (Risk management system across lifecycle) | Are risks identified, owned, treated with named controls, and reviewed on a defined cadence? |
+| `data.*` (`categories`, `sources`, `dpia`, `retention`) | Art. 10 (Data and data governance) | Are data sources, personal/special-category flags, retention, and DPIA screening documented? |
+| Full YAML record (`system.*`, `access.*`, `decisions`) | Art. 11 & Annex IV context (Technical documentation); Art. 12 (Record-keeping context) | Is there an inspectable, versioned record of architecture, connectors, decisions, and changes (`aiak diff`)? |
+| `reliance.user_notice`, `transparency.*` | Art. 13 (Transparency and provision of information to deployers); Art. 50 (Transparency for certain AI systems, including synthetic text/interaction notices) | Are affected people informed when interacting with AI or viewing synthetic outputs? |
+| `actions.*`, `reliance.human_review`, `reliance.challenge_route` | Art. 14 (Human oversight) & Art. 26 (Obligations of deployers of high-risk AI systems) | Are send/write modes gated by human approval, stop mechanisms (`stop_mechanism`), and meaningful review? |
+| `evaluation` (`offline_test_set`, `bias_review`, `security_review`, `AIAK-EVAL-*`) | Art. 15 (Accuracy, robustness and cybersecurity) | Is performance verified independently beyond raw usage counts before reliance in production? |
+
+## ISO/IEC 42001:2023 (AI Management System)
+
+Mapping to the public Harmonized Structure (Clauses 4–10) and Annex A control theme index of [ISO/IEC 42001:2023](https://www.iso.org/standard/81230.html). Because the full standard body text is behind a paywall (see [SOURCES.md](SOURCES.md)), this table maps at structural theme level only and does not verify conformance.
+
+| ISO/IEC 42001:2023 structure | Nearest `ai-assurance-kit` mechanism | How teams use it in practice |
+|---|---|---|
+| **Clause 4** Context of the organisation | `organisation`, `purpose`, `reliance.*`, custom `policy.yaml` | Tailors risk appetite and proportionality thresholds to organisational context. |
+| **Clause 5** Leadership | `accountability` (`business_owner`, `approver`, separate `assurer`) & `decisions` | Enforces named senior accountability and separates building from assuring (`AIAK-ROLE-001`). |
+| **Clause 6** Planning (risks, objectives) | `risks`, `controls`, policy risk appetite (`AIAK-RISK-001`, `AIAK-RISK-002`) | Captures likelihood/impact scores, named owners, and linked mitigations before build/go-live. |
+| **Clause 7** Support (competence, documented information) | Versioned YAML records, `json_schema`, rendered executive cards | Maintains auditable, diffable documentation in Git rather than scattered slide decks. |
+| **Clause 8** Operation (impact assessment, lifecycle) | `status` lifecycle gating (`AIAK-LIFE-001`), `data.dpia`, `access.connectors`, `actions.stop_mechanism` | Tracks gated progression (`proposed` -> `approved_to_build` -> `in_test` -> `live` -> `retired`). |
+| **Clause 9** Performance evaluation | `evaluation` timeline (`human_review_sample`, `red_team`, `bias_review`, `AIAK-EVAL-001..004`) | Separates exposure (`usage_metrics`) from grounded quality checks (`AIAK-EVAL-002`). |
+| **Clause 10** Improvement | `review.last_reviewed`, `review.next_review`, `aiak diff --fail-on-material` | Flags stale reviews (`AIAK-REV-001`) and triggers re-review when scope, model, or autonomy shifts. |
+| **Annex A** Control objectives (AI impact, data, third parties, lifecycle) | `system.third_party_supplier`, `transparency.*`, `data.*`, `actions.*` | Keeps third-party suppliers, data lineage, transparency obligations, and kill switches inspectable per use case. |

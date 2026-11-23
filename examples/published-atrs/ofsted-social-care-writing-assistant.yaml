@@ -1,0 +1,155 @@
+# yaml-language-server: $schema=../../schema/ai-use-record.schema.json
+#
+# Adapted from the published GOV.UK Algorithmic Transparency Record:
+#   URL: https://www.gov.uk/algorithmic-transparency-records/ai-writing-assistant-social-care
+#   GOV.UK public_updated_at: 2026-09-24
+# Note: Only facts published in the Tier 1 / Tier 2 GOV.UK record are recorded here.
+
+schema_version: "1.0"
+id: ofsted-social-care-writing-assistant
+title: AI Writing Assistant (Social Care)
+version: "1"
+status: retired
+organisation: The Office for Standards in Education, Children's Services and Skills (Ofsted)
+
+summary: >-
+  Self-serve beta assistant helping children's home inspectors draft suggested wording for three
+  sections of a full inspection report from written inspection evidence using ChatGPT 4.1 Mini on
+  internal Azure instances. Following the beta testing phase, Ofsted chose not to progress the
+  project further.
+purpose: >-
+  Reduce time spent manually writing and formatting first-draft inspection report sections so
+  inspectors can focus more time on evaluative inspection work.
+benefits:
+  - Structured first-draft wording in consistent house style (non-cash-releasing time savings).
+  - Separates AI-suggested plain-text drafts (V1) from inspector-authored final reports (V2).
+alternatives_considered: >-
+  Microsoft Power Apps with Azure AI Services was examined during discovery and rejected due to
+  limited customisation and compatibility compared with the team's Python engineering stack.
+
+accountability:
+  business_owner:
+    role: Head of Regulatory Business Change, Regulation and Social Care Policy
+  builder:
+    role: Data and Insight Team
+    team: Data and Insight Team
+  # Public ATRS record names SRO and Data & Insight Team without publishing separate maintainer/assurer roles.
+
+system:
+  description: >-
+    Python web pipeline converting inspector OneNote PDF evidence, resolving common acronyms, and
+    prompting ChatGPT 4.1 Mini for three report sections and house styling into a draft Word file.
+  model_kind: generative
+  model: ChatGPT 4.1 Mini (v4.1, Internal Azure Instance)
+  provider: OpenAI via Microsoft Azure
+  platform: Internal Azure Instances and Cygnum report management system
+  hosting: organisation_cloud
+
+data:
+  categories:
+    - Children's home inspection evidence written by Ofsted inspectors
+    - Sensitive personal details and protected characteristics (beta test / historic evidence)
+  personal_data: true
+  special_category_data: true
+  sources:
+    - Historical published inspection evidence (since April 2024, approved for 20-case test set)
+    - Synthetic inspection evidence created by subject matter experts
+  retention: >-
+    Inputs are processed temporarily in CPU memory and not retained by the LLM or used for training.
+    Draft test outputs are logged internally for 6 months before deletion.
+  dpia:
+    status: completed
+    decided_by: Data Protection Impact Assessment (testing phases)
+    date: 2025-08-06
+
+access:
+  users: Limited number of Ofsted children's homes test inspectors during evaluation
+  connectors:
+    - name: Inspector evidence PDF upload
+      system: Internal inspection web interface
+      permissions: [read]
+      purpose: Read exported inspection evidence text to draft report sections.
+    - name: Internal Azure OpenAI API
+      system: ChatGPT 4.1 Mini (Internal Azure Instance)
+      permissions: [read]
+      purpose: Generate suggested section text with zero training retention.
+    - name: Draft Word export (Cygnum V1)
+      system: Cygnum report management system
+      permissions: [write]
+      purpose: Store unedited AI draft separately as V1 prior to human QA and V2 authoring.
+
+actions:
+  mode: drafts
+  description: >-
+    Generates plain-text Word suggestions for three non-requirements sections saved separately as V1;
+    final judgement and requirements remain solely with the inspector.
+  human_approval_step: >-
+    Inspectors must enter their final judgement before generating drafts, and lead inspectors plus QA
+    reviewers edit every draft before V2 report authoring.
+  recipients:
+    - Ofsted children's homes inspectors and QA staff
+
+reliance:
+  relied_on_by:
+    - Children's homes lead inspectors and QA reviewers
+  how_outputs_are_used: As an initial plain-text draft starting point prior to full human QA.
+  decision_role: information_only
+  public_facing: false
+  public_effect: false
+  significant_influence: false
+  human_review: >-
+    Mandatory inspector review, comparison against underlying evidence, and multi-layered QA before
+    finalisation in Cygnum.
+  challenge_route: https://www.gov.uk/government/publications/complain-about-ofsted
+  user_notice: Top of every generated Word file labels suggested wording and inspector responsibilities.
+
+risks:
+  - id: R1
+    description: AI wording shapes regulatory judgements (GDPR Article 22) or misses evidence fidelity.
+    likelihood: 2
+    impact: 4
+    owner: Head of Regulatory Business Change, Regulation and Social Care Policy
+    controls: [C1, C2]
+  - id: R2
+    description: Accuracy, bias, or automation bias degrades inspection report quality.
+    likelihood: 3
+    impact: 3
+    owner: Data and Insight Team
+    controls: [C2, C3]
+
+controls:
+  - id: C1
+    description: Final inspector judgement must be entered before drafts are generated; plain V1 separation.
+    status: in_place
+    owner: Data and Insight Team
+  - id: C2
+    description: Mandatory inspector training, written guidance, and multi-stage QA comparison to evidence.
+    status: in_place
+    owner: Regulation and Social Care Policy
+  - id: C3
+    description: DPIA (2025-08-06) and Equality Impact Assessment (2025-06-23) completed for testing phase.
+    status: in_place
+
+evaluation:
+  - date: 2025-06-23
+    kind: bias_review
+    summary: Equality Impact Assessment completed; no negative equality impacts identified across nine categories.
+    performed_by: Ofsted Policy, Operations, Legal and Data teams
+  - date: 2026-09-24
+    kind: pilot
+    summary: Beta testing evaluated 20 historic cases; project closed after beta rather than progressed to live.
+    performed_by: Data and Insight Team
+
+decisions:
+  - type: retire
+    date: 2026-09-24
+    by: Ofsted (published ATRS update)
+    note: Chose not to progress project further following the beta phase of testing.
+
+transparency:
+  atrs_determination: in_scope
+  rationale: Published on GOV.UK ATRS repository.
+  record_url: https://www.gov.uk/algorithmic-transparency-records/ai-writing-assistant-social-care
+
+review:
+  last_reviewed: 2026-09-24

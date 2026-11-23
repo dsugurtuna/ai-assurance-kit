@@ -75,6 +75,26 @@ Quotations of NIST text are lightly normalised (capitalisation, dashes) and shor
 - Status: **verified directly on nist.gov** (released 26 January 2023; intended for voluntary use) and **cross-checked against NIST's official machine-readable dataset** (an export of NIST's Cybersecurity and Privacy Reference Tool) in <https://github.com/usnistgov/capordino> (`cprt_AI_100_1_0_0_07-07-2026.json`) and bibliographic record in <https://github.com/usnistgov/NIST-Tech-Pubs>.
 - How the kit uses it: function and subcategory references in the crosswalk and in rule citations. Only subcategories whose text is stored in `NIST_SUBCATEGORIES` in `src/ai_assurance_kit/sources.py` can be cited.
 
+### EU AI Act (Regulation (EU) 2024/1689)
+
+- URL: <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689> (ELI: <http://data.europa.eu/eli/reg/2024/1689/oj>)
+- Status: **official EUR-Lex legislation identifier verified** (Regulation (EU) 2024/1689 of 13 June 2024 laying down harmonised rules on artificial intelligence).
+- How the kit uses it: high-level structural orientation in [CROSSWALK.md](CROSSWALK.md) linking risk management (Article 9), data governance (Article 10), technical documentation (Article 11), record-keeping (Article 12), transparency (Articles 13 & 50), human oversight (Article 14), accuracy/robustness/cybersecurity (Article 15), and deployer obligations (Articles 26–27) to record fields. Does not provide legal classification or establish legal conformity.
+
+### ISO/IEC 42001:2023 (AI Management System)
+
+- URL: <https://www.iso.org/standard/81230.html>
+- Status: **bibliographic catalogue entry identified**; normative standard body text is behind ISO's paywall and was not read directly in full.
+- How the kit uses it: mapped in [CROSSWALK.md](CROSSWALK.md) solely at the level of ISO's public Harmonized Structure (Clauses 4–10: Context, Leadership, Planning, Support, Operation, Performance evaluation, Improvement) and publicly documented Annex A control themes. The kit does not verify or certify management-system conformance.
+
+### Published GOV.UK ATRS example records
+
+- Repository URL: <https://www.gov.uk/algorithmic-transparency-records>
+- Status: **three real records fetched directly via GOV.UK Content API** (`public_updated_at` timestamps preserved in `examples/published-atrs/`):
+  - Ofsted: *AI Writing Assistant (Social Care)* (<https://www.gov.uk/algorithmic-transparency-records/ai-writing-assistant-social-care>, updated `2026-09-24`)
+  - Cabinet Office (GCS): *Assist* (<https://www.gov.uk/algorithmic-transparency-records/cabinet-office-assist>, updated `2026-07-30`)
+  - Care Quality Commission: *Risk Categorisation* (<https://www.gov.uk/algorithmic-transparency-records/care-quality-commission-risk-categorisation>, updated `2026-03-30`)
+
 ## Re-checking
 
 Guidance changes. To re-check:
