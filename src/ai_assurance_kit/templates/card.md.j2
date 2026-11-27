@@ -23,7 +23,7 @@
 | Human approval | {{ (r.actions.human_approval_step or "not recorded") | md }} |
 | Relied on by | {{ r.reliance.relied_on_by | join("; ") | md }} ({{ r.reliance.decision_role.value | words }}) |
 | Public | public-facing: {{ r.reliance.public_facing | yesno }} · public effect: {{ r.reliance.public_effect | yesno }} · significant influence: {{ r.reliance.significant_influence | yesno }} |
-| ATRS determination | {{ r.transparency.atrs_determination.value | words }}{% if r.transparency.rationale %}: {{ r.transparency.rationale | md }}{% endif %} |
+| ATRS determination | {{ r.transparency.atrs_determination.value | words }}{% if r.transparency.rationale %}: {{ r.transparency.rationale | md }}{% endif %}{% if r.transparency.record_url %} · {% if record_url_is_link %}[{{ r.transparency.record_url | md }}]({{ r.transparency.record_url }}){% else %}{{ r.transparency.record_url | md }}{% endif %}{% endif %} |
 
 ## Proportionality level: {{ a.level.level.label | md }}
 
@@ -57,7 +57,7 @@ No checks fired. That means none of the kit's rules matched, not that the use is
 | ID | Risk | L x I | Owner | Controls |
 |---|---|---|---|---|
 {% for row in risk_rows %}
-| {{ row.risk.id | md }} | {{ row.risk.description | md }} | {{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} (above){% endif %} | {{ (row.risk.owner or "none") | md }} | {{ row.controls | md }} |
+| {{ row.risk.id | md }} | {{ row.risk.description | md }} | {{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} (above){% endif %}{% if row.risk.residual_score is not none %}; residual {{ row.risk.residual_likelihood }} x {{ row.risk.residual_impact }} = {{ row.risk.residual_score }}{% endif %} | {{ (row.risk.owner or "none") | md }}{% if row.risk.accepted_by %}; accepted by {{ row.risk.accepted_by | md }}{% if row.risk.acceptance_expiry %} (until {{ row.risk.acceptance_expiry.isoformat() }}){% endif %}{% if row.risk.acceptance_rationale %}: {{ row.risk.acceptance_rationale | md }}{% endif %}{% endif %} | {{ row.controls | md }} |
 {% endfor %}
 {% else %}
 No risks recorded.

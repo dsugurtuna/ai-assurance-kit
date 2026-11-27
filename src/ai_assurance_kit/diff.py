@@ -21,6 +21,8 @@ from ai_assurance_kit.schema import (
     ACTION_MODE_ORDER,
     DECISION_ROLE_ORDER,
     AIUseRecord,
+    ControlStatus,
+    DPIAStatus,
     Status,
 )
 
@@ -181,17 +183,21 @@ def field_changes(old: AIUseRecord, new: AIUseRecord) -> list[Change]:
         # An empty list that gains items (or loses them all) shows up as item changes instead.
         if () in (before, after) and any(p.startswith(path + "[") for p in {*a, *b}):
             continue
+        norm_before = None if before == "" else before
+        norm_after = None if after == "" else after
+        if norm_before == norm_after:
+            continue
         if path not in a:
             summary = "added"
         elif path not in b:
             summary = "removed"
-        elif before is None:
+        elif norm_before is None:
             summary = "set"
-        elif after is None:
+        elif norm_after is None:
             summary = "cleared"
         else:
             summary = "changed"
-        changes.append(Change(path, summary, _show(before), _show(after)))
+        changes.append(Change(path, summary, _show(norm_before), _show(norm_after)))
     return changes
 
 
@@ -252,6 +258,19 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
                 new.data.sources,
                 "New sources can change data quality, lawful basis and security exposure.",
                 _only_additions(old.data.sources, new.data.sources),
+            )
+        )
+    old_dpia, new_dpia = old.data.dpia.status, new.data.dpia.status
+    if (old_dpia is DPIAStatus.completed and new_dpia is not DPIAStatus.completed) or (
+        old_dpia is not DPIAStatus.not_screened and new_dpia is DPIAStatus.not_screened
+    ):
+        out.append(
+            Change(
+                "data.dpia.status",
+                f"DPIA status regressed from {old_dpia.value} to {new_dpia.value}",
+                old_dpia.value,
+                new_dpia.value,
+                "A completed or screened DPIA status has been wound back.",
             )
         )
 
@@ -419,10 +438,22 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
             )
         )
     factor = policy.changes.scale_factor
+    initial_threshold = policy.changes.initial_scale_threshold
     for name in ("users", "uses_per_month"):
         before = getattr(old.reliance.scale, name)
         after = getattr(new.reliance.scale, name)
-        if (
+        if before is None and after is not None and after >= initial_threshold:
+            out.append(
+                Change(
+                    f"reliance.scale.{name}",
+                    f"Scale newly recorded: {name.replace('_', ' ')} {after}",
+                    None,
+                    after,
+                    f"A first-time scale entry at or above {initial_threshold} (policy threshold) "
+                    "means errors reach many people.",
+                )
+            )
+        elif (
             before is not None
             and after is not None
             and after > before
@@ -486,6 +517,32 @@ def material_changes(old: AIUseRecord, new: AIUseRecord, policy: Policy) -> list
                     # A new risk is covered whole, like a new connector. For an existing risk
                     # only the score is explained; owner or control edits still show.
                     None if was is None else (f"{path}.likelihood", f"{path}.impact"),
+                )
+            )
+
+    # Controls removed or downgraded from in_place
+    new_controls = {c.id: c for c in new.controls}
+    for ctrl in old.controls:
+        if ctrl.status is not ControlStatus.in_place:
+            continue
+        if ctrl.id not in new_controls:
+            out.append(
+                Change(
+                    f"controls[{ctrl.id}]",
+                    f"In-place control '{ctrl.id}' removed",
+                    ctrl.description,
+                    None,
+                    "Removing an in-place control removes a safeguard.",
+                )
+            )
+        elif new_controls[ctrl.id].status is ControlStatus.planned:
+            out.append(
+                Change(
+                    f"controls[{ctrl.id}].status",
+                    f"Control '{ctrl.id}' moved from in_place to planned",
+                    ctrl.status.value,
+                    ControlStatus.planned.value,
+                    "A safeguard that was in place is no longer active.",
                 )
             )
     return out

@@ -12,8 +12,8 @@ Staff can ask an AI assistant to turn the transcript of an internal meeting into
 |---|---|
 | Purpose | Internal meetings are often left without notes, or with notes in different formats. The tool gives the chair a first draft so that notes are produced soon after the meeting and in a standard format. |
 | Business owner | Head of Corporate Services (Jordan Sample) |
-| Builder | Digital team developer (Alex Example) |
-| Maintainer | Digital service manager (Casey Demo) |
+| Builder | Digital team developer, Digital (Alex Example) |
+| Maintainer | Digital service manager, Digital (Casey Demo) |
 | Assurer | Data and AI assurance lead (Morgan Test) |
 | Approver | Chief Information Officer |
 | System | generative: General-purpose LLM (vendor-hosted) from Office software vendor, hosting vendor saas, supplier Office software vendor |

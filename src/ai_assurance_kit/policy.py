@@ -89,6 +89,11 @@ class ChangePolicy(_Model):
         gt=1.0,
         description="A rise in users or monthly uses by at least this factor is material.",
     )
+    initial_scale_threshold: int = Field(
+        default=1000,
+        ge=1,
+        description="A first-time users or monthly uses figure at or above this value is material.",
+    )
 
 
 class Policy(_Model):

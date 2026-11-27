@@ -152,6 +152,47 @@ def test_messages_are_prompts_not_verdicts(rule: Any, make_record: Make, fired: 
         assert not any(word in text.lower() for word in banned), text
 
 
+def test_secondary_rule_branches_are_prompts_not_verdicts(make_record: Make, fired: Fired) -> None:
+    banned = ("non-compliant", "noncompliant", "fails", "violat", "illegal", "unlawful")
+    cases = [
+        {
+            "actions.mode": "autonomous",
+            "access.connectors": [{"name": "DB", "permissions": ["delete"]}],
+        },
+        {
+            "status": "live",
+            "data.personal_data": True,
+            "data.dpia": {"status": "required_in_progress"},
+        },
+        {
+            "data.personal_data": True,
+            "data.dpia": {"status": "screened_not_required", "decided_by": None},
+        },
+        {
+            "reliance.public_facing": True,
+            "transparency.atrs_determination": "out_of_scope",
+            "transparency.rationale": None,
+        },
+        {
+            "accountability.builder": {"role": "Developer"},
+            "accountability.assurer": {"role": "Developer"},
+        },
+        {
+            "risks": [
+                {
+                    **_risk(4, 4, "Owner", [])[0],
+                    "accepted_by": "Director",
+                    "acceptance_rationale": "Expired.",
+                    "acceptance_expiry": "2026-09-29",
+                }
+            ]
+        },
+    ]
+    for changes in cases:
+        for finding in fired(make_record(changes)):
+            assert not any(word in finding.message.lower() for word in banned), finding.message
+
+
 # --------------------------------------------------------------------------- boundaries
 
 
@@ -163,6 +204,79 @@ def test_actions_drafts_may_write_to_a_drafts_location(make_record: Make, fired:
 def test_actions_drafts_may_not_send(make_record: Make, fired: Fired) -> None:
     record = make_record({"access.connectors": [{"name": "Mail", "permissions": ["send"]}]})
     assert "AIAK-ACT-003" in _ids(fired(record))
+
+
+@pytest.mark.parametrize("mode", ["writes_with_approval", "autonomous"])
+@pytest.mark.parametrize("perm", ["delete", "admin"])
+def test_act_003_flags_delete_and_admin_on_write_and_autonomous(
+    mode: str, perm: str, make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "actions.mode": mode,
+            "actions.human_approval_step": "Reviewed.",
+            "actions.stop_mechanism": "Switch.",
+            "access.connectors": [{"name": "Store", "permissions": ["read", perm]}],
+        }
+    )
+    assert "AIAK-ACT-003" in _ids(fired(record))
+
+
+@pytest.mark.parametrize("mode", ["writes_with_approval", "autonomous"])
+def test_act_003_allows_write_and_send_on_write_and_autonomous(
+    mode: str, make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "actions.mode": mode,
+            "actions.human_approval_step": "Reviewed.",
+            "actions.stop_mechanism": "Switch.",
+            "access.connectors": [{"name": "Mail", "permissions": ["read", "write", "send"]}],
+        }
+    )
+    assert "AIAK-ACT-003" not in _ids(fired(record))
+
+
+def test_live_system_with_in_progress_dpia_triggers_data_001(
+    make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "status": "live",
+            "data.personal_data": True,
+            "data.special_category_data": True,
+            "data.dpia": {"status": "required_in_progress"},
+        }
+    )
+    finding = next(f for f in fired(record) if f.rule.id == "AIAK-DATA-001")
+    assert "still in progress" in finding.message
+
+
+def test_in_test_system_with_in_progress_dpia_does_not_trigger_data_001(
+    make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "status": "in_test",
+            "data.personal_data": True,
+            "data.dpia": {"status": "required_in_progress"},
+            "decisions": [CLEAN["decisions"][0]],
+        }
+    )
+    assert "AIAK-DATA-001" not in _ids(fired(record))
+
+
+def test_personal_data_screened_out_without_decided_by_triggers_data_001(
+    make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "data.personal_data": True,
+            "data.dpia": {"status": "screened_not_required", "decided_by": None},
+        }
+    )
+    finding = next(f for f in fired(record) if f.rule.id == "AIAK-DATA-001")
+    assert finding.fields == ("data.dpia.decided_by",)
 
 
 def test_approval_described_satisfies_act_001(make_record: Make, fired: Fired) -> None:
@@ -186,11 +300,47 @@ def test_role_001_prompt_names_roles_not_people(make_record: Make, fired: Fired)
     assert "'Assurer'" in finding.message
 
 
-def test_same_person_needs_both_names(make_record: Make, fired: Fired) -> None:
+def test_same_role_without_names_triggers_role_001(make_record: Make, fired: Fired) -> None:
+    record = make_record(
+        {
+            "accountability.builder": {"role": "Data and Insight Team"},
+            "accountability.assurer": {"role": "Data and Insight Team"},
+        }
+    )
+    assert "AIAK-ROLE-001" in _ids(fired(record))
+
+
+def test_same_role_with_distinct_names_does_not_trigger_role_001(
+    make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "accountability.builder": {"role": "Developer", "name": "Alice"},
+            "accountability.assurer": {"role": "Developer", "name": "Bob"},
+        }
+    )
+    assert "AIAK-ROLE-001" not in _ids(fired(record))
+
+
+def test_same_role_in_different_teams_without_names_does_not_trigger_role_001(
+    make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "accountability.builder": {"role": "Developer", "team": "Delivery"},
+            "accountability.assurer": {"role": "Developer", "team": "Independent Assurance"},
+        }
+    )
+    assert "AIAK-ROLE-001" not in _ids(fired(record))
+
+
+def test_different_roles_without_names_does_not_trigger_role_001(
+    make_record: Make, fired: Fired
+) -> None:
     record = make_record(
         {
             "accountability.builder": {"role": "Developer"},
-            "accountability.assurer": {"role": "Developer"},
+            "accountability.assurer": {"role": "Assurance lead"},
         }
     )
     assert "AIAK-ROLE-001" not in _ids(fired(record))
@@ -252,6 +402,62 @@ def test_public_effect_without_significant_influence_does_not(
         {"reliance.public_effect": True, "transparency.atrs_determination": "not_assessed"}
     )
     assert "AIAK-TRANS-001" not in _ids(fired(record))
+
+
+def test_out_of_scope_on_public_facing_without_rationale_triggers_trans_001(
+    make_record: Make, fired: Fired
+) -> None:
+    record = make_record(
+        {
+            "reliance.public_facing": True,
+            "transparency.atrs_determination": "out_of_scope",
+            "transparency.rationale": None,
+        }
+    )
+    finding = next(f for f in fired(record) if f.rule.id == "AIAK-TRANS-001")
+    assert finding.fields == ("transparency.rationale",)
+
+
+def test_out_of_scope_with_rationale_silences_trans_001(make_record: Make, fired: Fired) -> None:
+    record = make_record(
+        {
+            "reliance.public_facing": True,
+            "transparency.atrs_determination": "out_of_scope",
+            "transparency.rationale": "Organisation not in mandatory ATRS scope.",
+        }
+    )
+    assert "AIAK-TRANS-001" not in _ids(fired(record))
+
+
+def test_active_risk_acceptance_silences_risk_002(make_record: Make, fired: Fired) -> None:
+    risk = {
+        **_risk(4, 4, "Owner", [])[0],
+        "accepted_by": "Senior Owner",
+        "acceptance_rationale": "Bounded pilot with manual audit.",
+        "acceptance_expiry": "2026-10-01",
+    }
+    assert "AIAK-RISK-002" not in _ids(fired(make_record({"risks": [risk]})))
+
+
+def test_expired_or_unexplained_risk_acceptance_triggers_risk_002(
+    make_record: Make, fired: Fired
+) -> None:
+    expired = {
+        **_risk(4, 4, "Owner", [])[0],
+        "accepted_by": "Senior Owner",
+        "acceptance_rationale": "Temporary waiver.",
+        "acceptance_expiry": "2026-09-29",
+    }
+    finding = next(
+        f for f in fired(make_record({"risks": [expired]})) if f.rule.id == "AIAK-RISK-002"
+    )
+    assert "expired on 2026-09-29" in finding.message
+
+    no_rationale = {**_risk(4, 4, "Owner", [])[0], "accepted_by": "Senior Owner"}
+    finding2 = next(
+        f for f in fired(make_record({"risks": [no_rationale]})) if f.rule.id == "AIAK-RISK-002"
+    )
+    assert "without a rationale" in finding2.message
 
 
 def test_proposed_records_are_not_asked_for_an_assurer(make_record: Make, fired: Fired) -> None:

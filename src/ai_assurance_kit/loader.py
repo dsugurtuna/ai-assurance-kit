@@ -167,7 +167,13 @@ def find_record_files(paths: list[str | Path]) -> list[Path]:
                 )
             )
         elif is_wildcard(raw):
-            found.extend(sorted(m for m in map(Path, glob.glob(str(raw))) if m.is_file()))
+            found.extend(
+                sorted(
+                    m
+                    for m in map(Path, glob.glob(str(raw)))
+                    if m.is_file() and m.suffix.lower() in RECORD_SUFFIXES
+                )
+            )
         else:
             found.append(p)
     return found

@@ -14,6 +14,8 @@ from ai_assurance_kit.schema import AIUseRecord, json_schema
 from tests.conftest import CLEAN, EXAMPLES, ROOT, set_path
 
 EXAMPLE_FILES = sorted(EXAMPLES.glob("*.yaml")) + sorted((EXAMPLES / "history").glob("*.yaml"))
+PUBLISHED_ATRS_FILES = sorted((EXAMPLES / "published-atrs").glob("*.yaml"))
+ALL_EXAMPLE_FILES = EXAMPLE_FILES + PUBLISHED_ATRS_FILES
 
 
 def _as_json(data: Any) -> Any:
@@ -192,7 +194,7 @@ def test_committed_json_schema_is_current() -> None:
     assert committed == json_schema(), "run: aiak schema -o schema/ai-use-record.schema.json"
 
 
-@pytest.mark.parametrize("path", EXAMPLE_FILES, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", ALL_EXAMPLE_FILES, ids=lambda p: p.name)
 def test_json_schema_accepts_examples(path: Any) -> None:
     data = _as_json(yaml.safe_load(path.read_text(encoding="utf-8")))
     jsonschema.Draft202012Validator(json_schema()).validate(data)
@@ -241,10 +243,23 @@ def _mutated(path: str, value: Any) -> dict[str, Any]:
         ("reliance.scale.users", -1),
         ("risks[0].likelihood", 0),
         ("risks[0].impact", 6),
+        ("risks[0].residual_likelihood", 0),
+        ("risks[0].residual_impact", 6),
+        ("risks[0].residual_likelihood", True),
+        ("risks[0].residual_impact", "2"),
+        # Empty strings on optional text fields must be rejected by both.
+        ("actions.human_approval_step", ""),
+        ("actions.stop_mechanism", ""),
+        ("data.retention", ""),
+        ("reliance.human_review", ""),
+        ("transparency.rationale", ""),
+        ("accountability.builder.name", ""),
+        ("risks[0].owner", ""),
         # Values both should accept.
         ("risks[0].likelihood", 3),
         ("reliance.scale.users", 0),
         ("data.personal_data", False),
+        ("system.third_party_supplier", ""),
     ],
 )
 def test_pydantic_and_json_schema_agree(path: str, value: Any) -> None:
@@ -287,3 +302,46 @@ def test_next_review_cannot_be_before_last_review() -> None:
 def test_next_review_may_equal_last_review() -> None:
     data = _mutated("review", {"last_reviewed": "2026-04-01", "next_review": "2026-04-01"})
     assert parse_record(data).review.next_review is not None
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "actions.human_approval_step",
+        "actions.stop_mechanism",
+        "data.retention",
+        "reliance.human_review",
+        "transparency.rationale",
+        "accountability.builder.name",
+    ],
+)
+def test_whitespace_only_optional_text_is_rejected(path: str) -> None:
+    assert any(p.startswith(path) for p in _problems({path: "   "}))
+
+
+def test_risk_residual_and_acceptance_validation() -> None:
+    risks = copy.deepcopy(CLEAN["risks"])
+    risks[0].update(
+        residual_likelihood=1,
+        residual_impact=2,
+        accepted_by="Senior Owner",
+        acceptance_rationale="Low exposure during pilot.",
+        acceptance_expiry="2027-01-01",
+    )
+    parsed = parse_record(_mutated("risks", risks))
+    assert parsed.risks[0].residual_score == 2
+    assert parsed.risks[0].accepted_by == "Senior Owner"
+
+    half_residual = copy.deepcopy(CLEAN["risks"])
+    half_residual[0]["residual_likelihood"] = 2
+    assert any(
+        "residual_likelihood and residual_impact" in p for p in _problems({"risks": half_residual})
+    )
+
+    anon_rationale = copy.deepcopy(CLEAN["risks"])
+    anon_rationale[0]["acceptance_rationale"] = "Approved."
+    assert any("accepted_by is required" in p for p in _problems({"risks": anon_rationale}))
+
+    anon_expiry = copy.deepcopy(CLEAN["risks"])
+    anon_expiry[0]["acceptance_expiry"] = "2027-01-01"
+    assert any("accepted_by is required" in p for p in _problems({"risks": anon_expiry}))

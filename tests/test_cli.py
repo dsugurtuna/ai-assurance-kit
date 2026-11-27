@@ -269,9 +269,40 @@ def test_unexpanded_wildcards_are_expanded(capsys: pytest.CaptureFixture[str]) -
     code, out = run("validate", str(EXAMPLES / "*.yaml"))
     assert code == 0
     assert out.count(": valid") == 3
+    code, out = run("validate", str(EXAMPLES / "*"))
+    assert code == 0
+    assert out.count(": valid") == 3
     code, _ = run("validate", str(EXAMPLES / "*.nothing"))
     assert code == 2
     assert "no files match" in capsys.readouterr().err
+
+
+def test_check_and_diff_output_flag(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    out_json = tmp_path / "check.json"
+    code, stdout_text = run(
+        "check", CHATBOT, *DAY, "--format", "json", "-o", str(out_json), "--fail-on", "high"
+    )
+    assert code == 1
+    assert stdout_text == ""
+    assert (
+        json.loads(out_json.read_text(encoding="utf-8"))[0]["record_id"]
+        == "service-helpline-chatbot"
+    )
+
+    diff_md = tmp_path / "diff.md"
+    code, stdout_text = run("diff", GRANT_V1, GRANT, "-o", str(diff_md), "--fail-on-material")
+    assert code == 1
+    assert stdout_text == ""
+    assert "## Material changes" in diff_md.read_text(encoding="utf-8")
+
+    missing = tmp_path / "no" / "dir" / "out.txt"
+    code, _ = run("check", NOTES, "-o", str(missing))
+    assert code == 2
+    assert "cannot write" in capsys.readouterr().err
+
+    code, _ = run("diff", GRANT_V1, GRANT, "-o", str(missing))
+    assert code == 2
+    assert "cannot write" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,8 @@
 # ai-assurance-kit
 
+[![CI](https://github.com/dsugurtuna/ai-assurance-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/dsugurtuna/ai-assurance-kit/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 Describe one AI use case as a structured record, validate it, run explainable checks, and get a one-page card and a portfolio register. The aim is proportionate AI assurance that a team can start in an afternoon.
 
 > [!IMPORTANT]
@@ -13,13 +16,13 @@ The questions a reviewer needs answered are usually short. Who owns it? What dat
 
 ## What this does
 
-- **A record schema** for one AI use case: purpose, accountable roles, system, data, connectors and permissions, what the system does with its outputs, who relies on them, risks, controls, evaluation evidence, governance decisions, transparency determination and review dates. Written in YAML, validated with pydantic, and exported as JSON Schema so anyone can validate without Python.
-- **26 explainable checks.** Each has an ID, a severity, a rationale and citations, and each result is phrased as a prompt: "record who decided...", not "non-compliant". Examples: sends or writes without a human approval step; personal data with no DPIA screening recorded; public-facing, so "ATRS: likely in scope, record the determination"; builder and assurer are the same person; live with no named maintainer or no evaluation evidence; review date passed; risk above appetite with no owner. Full list: [docs/RULES.md](docs/RULES.md).
+- **A record schema** for one AI use case: purpose, accountable roles, system, data, connectors and permissions, what the system does with its outputs, who relies on them, risks (with optional residual scores and formal risk-acceptance waivers with expiry dates), controls, evaluation evidence, governance decisions, transparency determination and review dates. Written in YAML, validated with pydantic, and exported as JSON Schema so anyone can validate without Python.
+- **26 explainable checks.** Each has an ID, a severity, a rationale and citations, and each result is phrased as a prompt: "record who decided...", not "non-compliant". Examples: sends or writes without a human approval step; personal data without a completed DPIA or screening decision; public-facing, so "ATRS: likely in scope, record the determination"; builder and assurer appear to be the same person or role; live with no named maintainer or no evaluation evidence; review date passed; risk above appetite with no owner or active acceptance. Full list: [docs/RULES.md](docs/RULES.md).
 - **Proportionality levels** computed from named record features under a policy file, with every reason shown. The bundled policy (standard / use-specific review / senior or specialist approval) is an **example to adapt**, not a recommendation.
-- **Change review.** `aiak diff` compares two versions of a record and flags material changes that should trigger re-review: new data, new connectors or permissions, new recipients or groups relying on the outputs, a move from drafts to autonomous sends, a removed safeguard (approval step, human review, stop mechanism, challenge route, user notice), a rise in scale, a new model, going live.
-- **Outputs people will read.** A one-page card in Markdown or standalone, print-ready, accessible HTML, and a portfolio register in CSV or Markdown.
-- **A crosswalk** from record fields and checks to the AI Playbook principles, ATRS sections, NIST AI RMF functions, and indicative **EU AI Act (Regulation (EU) 2024/1689)** / **ISO/IEC 42001:2023** governance structures: [docs/CROSSWALK.md](docs/CROSSWALK.md).
-- **Published ATRS adaptations** alongside the fictional walkthrough examples: three real public GOV.UK records (Ofsted, Cabinet Office Assist, CQC) in [examples/published-atrs/](examples/published-atrs/).
+- **Change review.** `aiak diff` compares two versions of a record and flags material changes that should trigger re-review: new data or DPIA status regressions, new connectors or permissions, new recipients or groups relying on the outputs, a move from drafts to autonomous sends, a removed or downgraded safeguard (in-place control, approval step, human review, stop mechanism, challenge route, user notice), a rise in scale (including large first-time entries), a new model, going live.
+- **Outputs people will read.** A one-page card in Markdown or standalone, print-ready, accessible HTML, and a portfolio register in CSV (with spreadsheet formula-injection neutralisation) or Markdown.
+- **A crosswalk** from record fields and checks to the AI Playbook principles, ATRS sections, AQuA Book roles, and NIST AI RMF functions (plus exploratory, non-normative structural orientation notes in the docs only — not implemented in checks and not a certification mapping): [docs/CROSSWALK.md](docs/CROSSWALK.md).
+- **Public GOV.UK ATRS reference adaptations** alongside the fictional walkthrough examples: independent open-source schema adaptations of three public records (published on GOV.UK under the Open Government Licence v3.0 by Ofsted, Cabinet Office GCS, and CQC) in [examples/published-atrs/](examples/published-atrs/).
 
 ## Quickstart
 
@@ -103,7 +106,7 @@ Validate records without Python, with any JSON Schema (2020-12) validator. For e
 check-jsonschema --schemafile schema/ai-use-record.schema.json examples/*.yaml
 ```
 
-The JSON Schema covers fields, types, allowed values and bounds, and tests check that it accepts and rejects the same values as `aiak validate`. A few rules need more than JSON Schema can express, so only `aiak validate` applies them: risks may only refer to controls that exist; risk IDs, control IDs and connector names must be unique; special category data implies personal data; the next review cannot fall before the last one; and text made only of spaces counts as empty.
+The JSON Schema covers fields, types, allowed values and bounds, and tests check that it accepts and rejects the same values as `aiak validate`. A few rules need more than JSON Schema can express, so only `aiak validate` applies them: risks may only refer to controls that exist; residual likelihood and impact must appear as a pair; risk acceptance rationale or expiry requires `accepted_by`; risk IDs, control IDs and connector names must be unique; special category data implies personal data; the next review cannot fall before the last one; and text made only of spaces counts as empty.
 
 ## What is on the card
 
@@ -111,10 +114,10 @@ One page, in this order, as Markdown or as a standalone HTML file with no script
 
 1. **Header**: title, the "unofficial" line, status, record version, the date it was checked as at, and the next review date (marked overdue if passed).
 2. **Summary**: the record's two or three plain-English sentences.
-3. **At a glance**: purpose; business owner, builder, maintainer, assurer and approver; system and hosting; data categories; personal data, DPIA status and retention; connectors with their permissions; what the system does with its outputs and who approves it; who relies on the outputs and how; public-facing and public-effect flags; the ATRS determination.
+3. **At a glance**: purpose; business owner, builder, maintainer, assurer and approver (including team attribution where recorded); system and hosting; data categories; personal data, DPIA status and retention; connectors with their permissions; what the system does with its outputs and who approves it; who relies on the outputs and how; public-facing and public-effect flags; the ATRS determination and any published `record_url`.
 4. **Proportionality level**, what it asks for, and every policy trigger that fired, with the condition that matched.
 5. **Prompts for human judgement**, most severe first, each with its rule ID.
-6. **Risks**, highest score first, marked where above appetite, with owner and linked controls and their status.
+6. **Risks**, highest score first, marked where above appetite, with any residual score, owner, formal risk acceptance details, and linked controls with their status.
 7. **Evidence and decisions** as one dated timeline.
 8. **Footer**: links to the sources behind the prompts that fired, and the file it was generated from.
 

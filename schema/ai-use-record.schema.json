@@ -116,6 +116,7 @@
         "human_approval_step": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -138,6 +139,7 @@
         "stop_mechanism": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -167,6 +169,7 @@
         "system": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -188,6 +191,7 @@
         "purpose": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -225,6 +229,7 @@
         "owner": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -260,6 +265,7 @@
         "reference": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -272,6 +278,7 @@
         "decided_by": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -342,6 +349,7 @@
         "retention": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -383,6 +391,7 @@
         "note": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -443,6 +452,7 @@
         "performed_by": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -462,6 +472,7 @@
         "link": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -542,6 +553,7 @@
         "name": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -555,6 +567,7 @@
         "team": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -611,6 +624,7 @@
         "human_review": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -624,6 +638,7 @@
         "challenge_route": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -637,6 +652,7 @@
         "user_notice": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -724,6 +740,7 @@
         "owner": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -742,6 +759,78 @@
           },
           "title": "Controls",
           "type": "array"
+        },
+        "residual_likelihood": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expected likelihood after in-place controls (1 to 5).",
+          "title": "Residual Likelihood"
+        },
+        "residual_impact": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expected impact after in-place controls (1 to 5).",
+          "title": "Residual Impact"
+        },
+        "accepted_by": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Role that formally accepts the risk above appetite or without in-place controls.",
+          "title": "Accepted By"
+        },
+        "acceptance_rationale": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why the risk is accepted and under what conditions.",
+          "title": "Acceptance Rationale"
+        },
+        "acceptance_expiry": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date by which a recorded risk acceptance expires and must be reviewed.",
+          "title": "Acceptance Expiry"
         }
       },
       "required": [
@@ -825,6 +914,7 @@
         "platform": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -872,6 +962,7 @@
         "rationale": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -884,6 +975,7 @@
         "record_url": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -921,6 +1013,7 @@
     "version": {
       "default": "1",
       "description": "Version of this record.",
+      "minLength": 1,
       "title": "Version",
       "type": "string"
     },
@@ -930,6 +1023,7 @@
     "organisation": {
       "anyOf": [
         {
+          "minLength": 1,
           "type": "string"
         },
         {
@@ -962,6 +1056,7 @@
     "alternatives_considered": {
       "anyOf": [
         {
+          "minLength": 1,
           "type": "string"
         },
         {

@@ -83,6 +83,8 @@ triggers:
 changes:
   # A rise in users or monthly uses by at least this factor counts as a material change.
   scale_factor: 2.0
+  # A first-time users or monthly uses figure at or above this threshold counts as material.
+  initial_scale_threshold: 1000
 
 # Rule IDs to switch off, for example if your organisation is outside the scope of a
 # UK-specific prompt. Prefer recording a determination over disabling a rule.

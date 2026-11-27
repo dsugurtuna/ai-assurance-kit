@@ -92,7 +92,7 @@
     <dt>Human approval</dt><dd>{{ r.actions.human_approval_step or "not recorded" }}</dd>
     <dt>Relied on by</dt><dd>{{ r.reliance.relied_on_by | join("; ") }} ({{ r.reliance.decision_role.value | words }})</dd>
     <dt>Public</dt><dd>public-facing: {{ r.reliance.public_facing | yesno }} · public effect: {{ r.reliance.public_effect | yesno }} · significant influence: {{ r.reliance.significant_influence | yesno }}</dd>
-    <dt>ATRS determination</dt><dd>{{ r.transparency.atrs_determination.value | words }}{% if r.transparency.rationale %}: {{ r.transparency.rationale }}{% endif %}</dd>
+    <dt>ATRS determination</dt><dd>{{ r.transparency.atrs_determination.value | words }}{% if r.transparency.rationale %}: {{ r.transparency.rationale }}{% endif %}{% if r.transparency.record_url %} · {% if record_url_is_link %}<a href="{{ r.transparency.record_url }}">{{ r.transparency.record_url }}</a>{% else %}{{ r.transparency.record_url }}{% endif %}{% endif %}</dd>
   </dl>
 </section>
 
@@ -139,7 +139,7 @@
     <thead><tr><th scope="col">ID</th><th scope="col">Risk</th><th scope="col">L x I</th><th scope="col">Owner</th><th scope="col">Controls</th></tr></thead>
     <tbody>
 {% for row in risk_rows %}
-      <tr><td>{{ row.risk.id }}</td><td>{{ row.risk.description }}</td><td>{{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} <strong>(above)</strong>{% endif %}</td><td>{{ row.risk.owner or "none" }}</td><td>{{ row.controls }}</td></tr>
+      <tr><td>{{ row.risk.id }}</td><td>{{ row.risk.description }}</td><td>{{ row.risk.likelihood }} x {{ row.risk.impact }} = {{ row.risk.score }}{% if row.above %} <strong>(above)</strong>{% endif %}{% if row.risk.residual_score is not none %}; residual {{ row.risk.residual_likelihood }} x {{ row.risk.residual_impact }} = {{ row.risk.residual_score }}{% endif %}</td><td>{{ row.risk.owner or "none" }}{% if row.risk.accepted_by %}; accepted by {{ row.risk.accepted_by }}{% if row.risk.acceptance_expiry %} (until {{ row.risk.acceptance_expiry.isoformat() }}){% endif %}{% if row.risk.acceptance_rationale %}: {{ row.risk.acceptance_rationale }}{% endif %}{% endif %}</td><td>{{ row.controls }}</td></tr>
 {% endfor %}
     </tbody>
   </table>

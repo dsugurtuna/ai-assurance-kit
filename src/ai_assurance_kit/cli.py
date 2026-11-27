@@ -203,10 +203,12 @@ def cmd_check(args: argparse.Namespace, out: TextIO) -> int:
             }
             for path, a in results
         ]
-        out.write(json.dumps(payload, indent=2) + "\n")
+        report_text = json.dumps(payload, indent=2) + "\n"
     else:
-        out.write(f"{DISCLAIMER}\n\n")
-        out.write("\n".join(_text_report(p, a, args.explain) for p, a in results))
+        body = "\n".join(_text_report(p, a, args.explain) for p, a in results)
+        report_text = f"{DISCLAIMER}\n\n{body}"
+    if _emit(report_text, args.output, out) != EXIT_OK:
+        return EXIT_INVALID
     if status == EXIT_OK and args.fail_on:
         threshold = Severity(args.fail_on)
         if any(meets_threshold(a.findings, threshold) for _, a in results):
@@ -249,12 +251,22 @@ def cmd_diff(args: argparse.Namespace, out: TextIO) -> int:
     policy = load_policy(args.policy)
     old, new = load_record(args.old), load_record(args.new)
     report = diff_records(old, new, policy, args.old, args.new)
-    if args.format == "json":
-        out.write(json.dumps(report.to_dict(), indent=2, default=str) + "\n")
-    elif args.format == "md":
-        out.write(_diff_markdown(report))
+    fmt = args.format
+    if fmt is None:
+        if _has_suffix(args.output, ".json"):
+            fmt = "json"
+        elif _has_suffix(args.output, ".md"):
+            fmt = "md"
+        else:
+            fmt = "text"
+    if fmt == "json":
+        text = json.dumps(report.to_dict(), indent=2, default=str) + "\n"
+    elif fmt == "md":
+        text = _diff_markdown(report)
     else:
-        out.write(_diff_text(report))
+        text = _diff_text(report)
+    if _emit(text, args.output, out) != EXIT_OK:
+        return EXIT_INVALID
     if args.fail_on_material and report.needs_review:
         return EXIT_THRESHOLD
     return EXIT_OK
@@ -366,6 +378,7 @@ def build_parser() -> argparse.ArgumentParser:
     policy_opt(p)
     today_opt(p)
     p.add_argument("--format", choices=["text", "json"], default="text")
+    p.add_argument("-o", "--output", help="write to this file instead of stdout")
     p.add_argument("--explain", action="store_true", help="show each rule's rationale and sources")
     p.add_argument(
         "--fail-on",
@@ -378,7 +391,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("old")
     p.add_argument("new")
     policy_opt(p)
-    p.add_argument("--format", choices=["text", "md", "json"], default="text")
+    p.add_argument(
+        "--format",
+        choices=["text", "md", "json"],
+        help="default: from -o extension (.md/.json), else text",
+    )
+    p.add_argument("-o", "--output", help="write to this file instead of stdout")
     p.add_argument("--fail-on-material", action="store_true", help="exit 1 if re-review is due")
     p.set_defaults(func=cmd_diff)
 

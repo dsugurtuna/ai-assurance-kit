@@ -61,6 +61,16 @@ def register_rows(items: Sequence[tuple[str, Assessment]]) -> list[dict[str, str
     return rows
 
 
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value: str) -> str:
+    """Neutralise spreadsheet formula prefixes before writing CSV cells."""
+    if value and (value[0] in _FORMULA_PREFIXES or value.lstrip().startswith(("=", "+", "-", "@"))):
+        return f"'{value}"
+    return value
+
+
 def render_register(
     items: Sequence[tuple[str, Assessment]],
     fmt: RegisterFormat = "md",
@@ -72,7 +82,7 @@ def render_register(
         buf = io.StringIO()
         writer = csv.DictWriter(buf, fieldnames=REGISTER_COLUMNS, lineterminator="\n")
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows({k: _csv_safe(v) for k, v in row.items()} for row in rows)
         return buf.getvalue()
     template = environment().get_template("register.md.j2")
     as_at = today.isoformat() if today else (items[0][1].today.isoformat() if items else "")

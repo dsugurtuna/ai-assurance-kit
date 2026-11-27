@@ -152,6 +152,7 @@ def hostile_data(text: str) -> dict[str, Any]:
     for person in data["accountability"].values():
         person.update(name=None, team=None)
     data["access"]["connectors"][0].update(system=None, purpose=None)
+    data["risks"][0].update(accepted_by=None, acceptance_rationale=None)
     data["controls"][0]["owner"] = None
     data["evaluation"][0].update(performed_by=None, link=None)
     data["decisions"][0]["note"] = None

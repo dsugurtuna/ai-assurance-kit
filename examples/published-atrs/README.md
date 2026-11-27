@@ -1,14 +1,19 @@
-# Published GOV.UK ATRS Examples
+# Published GOV.UK ATRS Reference Adaptations
 
-These three YAML records adapt real public submissions from the GOV.UK
+These three YAML records are independent open-source schema adaptations of public submissions
+published by their respective UK public bodies on the GOV.UK
 [Algorithmic Transparency Recording Standard (ATRS) repository](https://www.gov.uk/algorithmic-transparency-records)
-into `ai-assurance-kit` format. Each file links directly to its primary GOV.UK URL and notes the
-published `public_updated_at` timestamp from the GOV.UK Content API.
+under the Open Government Licence v3.0 (OGL v3.0). They are reference examples only — not official
+GOV.UK publications and not authored on behalf of those bodies. Each file links directly to its
+primary GOV.UK URL and notes the `public_updated_at` timestamp from the GOV.UK Content API.
 
 Because public ATRS records summarise governance rather than exposing internal control registers,
-formal approval dates, or named internal assurers, fields that are not stated in the public record
-are left unset cleanly. Running `aiak check examples/published-atrs/` therefore illustrates what a
-proportionate reviewer notices when auditing a public disclosure against internal assurance records.
+formal approval dates, named internal assurers, or `1..5` numeric risk scores, fields that are
+not stated in the public record are either left unset cleanly or explicitly marked in each YAML
+header as schema-required adapter proxies (for example, ordinal `1..5` `likelihood`/`impact`
+estimates, `public_updated_at` fallback dates on evaluation entries, and placeholder `decided_by`
+labels where omitted). Running `aiak check examples/published-atrs/` therefore illustrates what a
+proportionate reviewer notices when comparing a public disclosure against internal assurance records.
 
 | File | Organisation | Tool | Status in source | Primary GOV.UK record |
 |---|---|---|---|---|

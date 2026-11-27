@@ -1,9 +1,12 @@
 # yaml-language-server: $schema=../../schema/ai-use-record.schema.json
 #
-# Adapted from the published GOV.UK Algorithmic Transparency Record:
+# Independent open-source reference adaptation of a public GOV.UK Algorithmic Transparency
+# Record (published under the Open Government Licence v3.0; not affiliated with Ofsted):
 #   URL: https://www.gov.uk/algorithmic-transparency-records/ai-writing-assistant-social-care
 #   GOV.UK public_updated_at: 2026-09-24
-# Note: Only facts published in the Tier 1 / Tier 2 GOV.UK record are recorded here.
+# Note: Factual details come from the public GOV.UK record, while schema-required numeric
+#       likelihood/impact scores (1..5), the beta evaluation date matching public_updated_at, and
+#       generic decided_by labels where ATRS omits them are adapter proxies for schema demonstration.
 
 schema_version: "1.0"
 id: ofsted-social-care-writing-assistant

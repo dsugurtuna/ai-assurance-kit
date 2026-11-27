@@ -20,3 +20,7 @@ aiak register examples/ --today 2026-09-30 -o examples/cards/register.md
 ```
 
 The same files are used as snapshots by `tests/test_render.py`, so they cannot drift from the code.
+
+## Public GOV.UK ATRS reference adaptations
+
+Separate from the fictional walkthrough examples above, [published-atrs/](published-atrs/) holds three independent open-source schema adaptations of real public submissions published on GOV.UK under the Open Government Licence v3.0 (Cabinet Office GCS Assist, CQC Risk Categorisation, and Ofsted AI Writing Assistant). See [published-atrs/README.md](published-atrs/README.md) for adaptation details and schema proxies.

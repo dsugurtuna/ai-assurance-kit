@@ -200,3 +200,71 @@ def test_example_register_snapshot(policy: Policy) -> None:
     if UPDATE:
         snapshot.write_text(rendered, encoding="utf-8")
     assert rendered == Path(snapshot).read_text(encoding="utf-8")
+
+
+def test_person_team_and_record_url_render_on_cards(make_record: Make, policy: Policy) -> None:
+    record = make_record(
+        {
+            "accountability.builder": {"role": "Developer", "name": "Sam", "team": "AI Platform"},
+            "accountability.assurer": {"role": "AI Team", "team": "AI Team"},
+            "transparency.record_url": "https://www.gov.uk/algorithmic-transparency-records/example",
+        }
+    )
+    md = render_card(record, policy, fmt="md", today=TODAY, redact_names=True)
+    html = render_card(record, policy, fmt="html", today=TODAY, redact_names=True)
+    assert "Developer, AI Platform" in md
+    assert "Sam" not in md
+    assert "AI Team (AI Team)" not in md
+    assert "[https://www.gov.uk/algorithmic-transparency-records/example]" in md
+    assert '<a href="https://www.gov.uk/algorithmic-transparency-records/example">' in html
+
+
+def test_hostile_record_url_does_not_render_unsafe_link(make_record: Make, policy: Policy) -> None:
+    record = make_record({"transparency.record_url": "javascript:alert(1)"})
+    html = render_card(record, policy, fmt="html", today=TODAY)
+    assert 'href="javascript:' not in html
+    assert "javascript:alert(1)" in html
+
+
+def test_residual_risk_and_acceptance_render_on_cards(make_record: Make, policy: Policy) -> None:
+    record = make_record(
+        {
+            "risks": [
+                {
+                    "id": "R1",
+                    "description": "High inherent risk.",
+                    "likelihood": 4,
+                    "impact": 4,
+                    "owner": "Service owner",
+                    "controls": [],
+                    "residual_likelihood": 2,
+                    "residual_impact": 2,
+                    "accepted_by": "Director",
+                    "acceptance_rationale": "Manual review during pilot.",
+                    "acceptance_expiry": "2027-01-31",
+                }
+            ]
+        }
+    )
+    md = render_card(record, policy, fmt="md", today=TODAY)
+    html = render_card(record, policy, fmt="html", today=TODAY)
+    assert "residual 2 x 2 = 4" in md
+    assert "accepted by Director (until 2027-01-31): Manual review during pilot." in md
+    assert "residual 2 x 2 = 4" in html
+    assert "accepted by Director (until 2027-01-31): Manual review during pilot." in html
+
+
+def test_csv_register_neutralises_formula_prefixes(make_record: Make, policy: Policy) -> None:
+    import csv
+    import io
+
+    cases = ["=cmd|'/C calc'!A0", "+1+1", "-2+3", "@SUM(1,2)"]
+    path_cases = ["\t=1", "\r=1", " =1+1"]
+    items = [
+        (f"records/{i}.yaml", assess(make_record({"title": title}), policy, TODAY))
+        for i, title in enumerate(cases)
+    ] + [(src, assess(make_record(), policy, TODAY)) for src in path_cases]
+    csv_text = render_register(items, fmt="csv", today=TODAY)
+    rows = list(csv.DictReader(io.StringIO(csv_text)))
+    assert [row["title"] for row in rows[: len(cases)]] == [f"'{t}" for t in cases]
+    assert [row["file"] for row in rows[len(cases) :]] == [f"'{p}" for p in path_cases]

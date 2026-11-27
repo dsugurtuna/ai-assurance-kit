@@ -40,6 +40,8 @@ def test_published_atrs_records_load_check_and_render(path: Path) -> None:
     assert record.transparency.record_url.startswith(
         "https://www.gov.uk/algorithmic-transparency-records/"
     )
+    assert record.transparency.record_url in card_md
+    assert record.transparency.record_url in card_html
     assert result.level.id in {lv.id for lv in policy.levels}
     assert record.title in card_md
     assert "Unofficial" in card_html
@@ -56,8 +58,15 @@ def test_published_atrs_surface_realistic_gaps() -> None:
     assist_ids = {f.rule.id for f in run_checks(assist, policy, today=TODAY)}
     ofsted_ids = {f.rule.id for f in run_checks(ofsted, policy, today=TODAY)}
 
-    # Live records without a separate maintainer or assurer surface governance prompts cleanly.
-    assert "AIAK-ROLE-003" in cqc_ids
-    assert "AIAK-ROLE-002" in assist_ids
+    # Live records without separate maintainer/assurer or matching permissions surface prompts.
+    assert cqc_ids == {
+        "AIAK-ROLE-003",
+        "AIAK-ACT-003",
+        "AIAK-LIFE-001",
+        "AIAK-REV-002",
+        "AIAK-ROLE-002",
+        "AIAK-EVAL-004",
+    }
+    assert assist_ids == {"AIAK-LIFE-001", "AIAK-REV-002", "AIAK-ROLE-002"}
     # Retired Ofsted record skips live-only maintainer/review rules cleanly.
-    assert "AIAK-ROLE-003" not in ofsted_ids
+    assert ofsted_ids == set()

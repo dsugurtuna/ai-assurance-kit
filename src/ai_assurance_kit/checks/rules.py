@@ -17,6 +17,7 @@ from ai_assurance_kit.schema import (
     STATUS_ORDER,
     ActionMode,
     AIUseRecord,
+    ATRSDetermination,
     ControlStatus,
     DecisionRole,
     DecisionType,
@@ -50,6 +51,14 @@ def _norm(name: str) -> str:
 
 def _same_person(a: Person | None, b: Person | None) -> bool:
     return bool(a and b and a.name and b.name and _norm(a.name) == _norm(b.name))
+
+
+def _same_role_without_distinct_names(a: Person | None, b: Person | None) -> bool:
+    if a is None or b is None or (a.name and b.name):
+        return False
+    if _norm(a.role) != _norm(b.role):
+        return False
+    return not a.team or not b.team or _norm(a.team) == _norm(b.team)
 
 
 def _strings(value: Any, path: str = "") -> Iterator[tuple[str, str]]:
@@ -139,6 +148,14 @@ def no_stop_mechanism(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
         )
 
 
+_TOO_MUCH_BY_MODE: dict[ActionMode, set[Permission]] = {
+    ActionMode.read_only: {Permission.write, Permission.send, Permission.delete, Permission.admin},
+    ActionMode.drafts: {Permission.send, Permission.delete, Permission.admin},
+    ActionMode.writes_with_approval: {Permission.delete, Permission.admin},
+    ActionMode.autonomous: {Permission.delete, Permission.admin},
+}
+
+
 @rule(
     "AIAK-ACT-003",
     "Connector permissions exceed what the system is recorded as doing",
@@ -150,19 +167,23 @@ def no_stop_mechanism(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
 )
 def excess_permissions(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     mode = record.actions.mode
-    if mode is ActionMode.read_only:
-        too_much = {Permission.write, Permission.send, Permission.delete, Permission.admin}
-    elif mode is ActionMode.drafts:
-        too_much = {Permission.send, Permission.delete, Permission.admin}
-    else:
-        return
+    too_much = _TOO_MUCH_BY_MODE[mode]
     for i, conn in enumerate(record.access.connectors):
         extra = sorted(p.value for p in too_much.intersection(conn.permissions))
         if extra:
+            if mode in (ActionMode.read_only, ActionMode.drafts):
+                advice = (
+                    "Remove the permission, or update the action mode and the controls that go "
+                    "with it."
+                )
+            else:
+                advice = (
+                    "Remove the excess permission, or record why it is needed and the controls "
+                    "that restrict it."
+                )
             yield Hit(
-                f"Connector '{conn.name}' has {', '.join(extra)} permission but the action mode "
-                f"is '{mode.value}'. Remove the permission, or update the action mode and the "
-                "controls that go with it.",
+                f"Connector '{conn.name}' has {', '.join(extra)} permission while the action mode "
+                f"is '{mode.value}'. {advice}",
                 (f"access.connectors[{i}].permissions",),
             )
 
@@ -190,11 +211,11 @@ def no_recipients(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
 
 @rule(
     "AIAK-DATA-001",
-    "Personal data with no DPIA screening recorded",
+    "Personal data without a completed DPIA or screening decision",
     Severity.high,
     """Whether a data protection impact assessment is needed is a decision for the
     organisation, typically involving its data protection lead. The kit cannot make it, but it
-    can notice when no decision is recorded.""",
+    can notice when no decision is recorded or a live system has an unfinished DPIA.""",
     refs=[
         Ref("ico-dpia"),
         atrs("Development Data Specification (Tier 2)"),
@@ -203,11 +224,27 @@ def no_recipients(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     ],
 )
 def no_dpia_screening(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
-    if record.data.personal_data and record.data.dpia.status is DPIAStatus.not_screened:
+    d = record.data
+    if not d.personal_data:
+        return
+    if d.dpia.status is DPIAStatus.not_screened:
         yield Hit(
             "Personal data is involved and no DPIA screening is recorded. Ask your data "
             "protection lead to screen it, then record the outcome, who decided and when.",
             ("data.dpia.status",),
+        )
+    elif record.status is Status.live and d.dpia.status is DPIAStatus.required_in_progress:
+        yield Hit(
+            "Personal data is involved and the system is live while its DPIA is still in "
+            "progress. Complete the DPIA and update data.dpia.status, or record who decided to "
+            "go live before completion.",
+            ("data.dpia.status",),
+        )
+    elif d.dpia.status is DPIAStatus.screened_not_required and not d.dpia.decided_by:
+        yield Hit(
+            "Personal data is involved and the DPIA was screened as not required, with no "
+            "deciding role recorded. Record who made that screening call and when.",
+            ("data.dpia.decided_by",),
         )
 
 
@@ -276,12 +313,24 @@ def atrs_determination(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
         reasons.append("members of the public interact with it directly")
     if r.public_effect and r.significant_influence:
         reasons.append("its outputs significantly influence decisions with public effect")
-    if reasons and record.transparency.atrs_determination.value == "not_assessed":
+    if not reasons:
+        return
+    if record.transparency.atrs_determination is ATRSDetermination.not_assessed:
         yield Hit(
             f"The record says {' and '.join(reasons)}. If your organisation is covered by the "
             "ATRS mandatory scope, this tool is likely in scope. Record the determination (in "
             "scope or out of scope, and why) in transparency.atrs_determination.",
             ("transparency.atrs_determination",),
+        )
+    elif (
+        record.transparency.atrs_determination is ATRSDetermination.out_of_scope
+        and not record.transparency.rationale
+    ):
+        yield Hit(
+            f"The record says {' and '.join(reasons)}, yet transparency.atrs_determination is "
+            "'out_of_scope' with no rationale recorded. Record why an exemption or scope "
+            "exclusion applies in transparency.rationale.",
+            ("transparency.rationale",),
         )
 
 
@@ -324,6 +373,14 @@ def builder_is_assurer(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
             f"The builder ('{acc.builder.role}') and the assurer ('{acc.assurer.role}') are "
             "recorded with the same name. Name an assurer who did not build it, or record why "
             "that is not possible and who accepts that.",
+            ("accountability.builder", "accountability.assurer"),
+        )
+    elif _same_role_without_distinct_names(acc.builder, acc.assurer):
+        assert acc.assurer is not None
+        yield Hit(
+            f"The builder and the assurer are both recorded under the same role "
+            f"('{acc.builder.role}') without distinct names. Name a separate assurer role or "
+            "distinct people, or record why that is not possible and who accepts that.",
             ("accountability.builder", "accountability.assurer"),
         )
 
@@ -507,7 +564,8 @@ def risk_without_owner(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
     "Risk above appetite with no control in place",
     Severity.warning,
     """Planned controls do not reduce risk yet. A risk above appetite should have at least one
-    control in place, or a recorded decision to accept it.""",
+    control in place, or an active recorded decision to accept it (accepted_by and
+    acceptance_rationale, with an optional acceptance_expiry).""",
     refs=[nist("MANAGE 1.3"), Ref("orange-book")],
 )
 def risk_without_control(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit]:
@@ -524,6 +582,24 @@ def risk_without_control(record: AIUseRecord, ctx: CheckContext) -> Iterator[Hit
             )
         else:
             state = "it has no linked controls"
+        if r.accepted_by is not None:
+            if r.acceptance_expiry is not None and r.acceptance_expiry < ctx.today:
+                yield Hit(
+                    f"Risk {r.id} ({r.score}) is above appetite and {state}; its recorded "
+                    f"acceptance expired on {r.acceptance_expiry.isoformat()}. Put a control in "
+                    "place, or renew the acceptance.",
+                    (f"risks[{i}].acceptance_expiry", f"risks[{i}].controls"),
+                )
+                continue
+            if not r.acceptance_rationale:
+                yield Hit(
+                    f"Risk {r.id} ({r.score}) is above appetite and {state}; acceptance is "
+                    "recorded without a rationale. Add acceptance_rationale, or put a control in "
+                    "place.",
+                    (f"risks[{i}].acceptance_rationale", f"risks[{i}].controls"),
+                )
+                continue
+            continue
         yield Hit(
             f"Risk {r.id} ({r.score}) is above appetite and {state}. Put a control in place, "
             "or record who accepts the risk.",

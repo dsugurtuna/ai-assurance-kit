@@ -19,7 +19,7 @@ requires what the check looks for. Unofficial; not government guidance.
 | [AIAK-ACT-002](#aiak-act-002) | warning | No way to stop the system is recorded |
 | [AIAK-ACT-003](#aiak-act-003) | warning | Connector permissions exceed what the system is recorded as doing |
 | [AIAK-ACT-004](#aiak-act-004) | warning | Recipients of sends or writes are not recorded |
-| [AIAK-DATA-001](#aiak-data-001) | high | Personal data with no DPIA screening recorded |
+| [AIAK-DATA-001](#aiak-data-001) | high | Personal data without a completed DPIA or screening decision |
 | [AIAK-DATA-002](#aiak-data-002) | warning | No retention period recorded for personal data |
 | [AIAK-DATA-003](#aiak-data-003) | info | Special category data screened out of a DPIA without a recorded rationale |
 | [AIAK-TRANS-001](#aiak-trans-001) | warning | ATRS: likely in scope, record the determination |
@@ -100,9 +100,9 @@ Sources:
 
 ## AIAK-DATA-001
 
-**Personal data with no DPIA screening recorded** (severity: high; skipped when status is: retired)
+**Personal data without a completed DPIA or screening decision** (severity: high; skipped when status is: retired)
 
-Why: Whether a data protection impact assessment is needed is a decision for the organisation, typically involving its data protection lead. The kit cannot make it, but it can notice when no decision is recorded.
+Why: Whether a data protection impact assessment is needed is a decision for the organisation, typically involving its data protection lead. The kit cannot make it, but it can notice when no decision is recorded or a live system has an unfinished DPIA.
 
 Sources:
 
@@ -273,7 +273,7 @@ Sources:
 
 **Risk above appetite with no control in place** (severity: warning; skipped when status is: retired)
 
-Why: Planned controls do not reduce risk yet. A risk above appetite should have at least one control in place, or a recorded decision to accept it.
+Why: Planned controls do not reduce risk yet. A risk above appetite should have at least one control in place, or an active recorded decision to accept it (accepted_by and acceptance_rationale, with an optional acceptance_expiry).
 
 Sources:
 

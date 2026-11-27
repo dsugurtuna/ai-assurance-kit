@@ -12,8 +12,8 @@ A model scores incoming applications to a community grants scheme against the pu
 |---|---|
 | Purpose | Applications arrive in peaks and assessors work in date order, so clearly eligible, time-sensitive applications can wait weeks. A suggested order should shorten those waits, and an acknowledgement tells applicants when to expect a decision. |
 | Business owner | Grants programme director (Taylor Sample) |
-| Builder | Data scientist (Jamie Example) |
-| Maintainer | Analysis team lead (Robin Demo) |
+| Builder | Data scientist, Analysis (Jamie Example) |
+| Maintainer | Analysis team lead, Analysis (Robin Demo) |
 | Assurer | Analytical assurance reviewer (Avery Test) |
 | Approver | Grants programme director (Taylor Sample) |
 | System | predictive: Gradient-boosted classifier over text features from in-house, hosting organisation cloud |

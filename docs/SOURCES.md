@@ -53,7 +53,7 @@ Quotations of NIST text are lightly normalised (capitalisation, dashes) and shor
 
 - URL: <https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/individual-rights/individual-rights/rights-related-to-automated-decision-making-including-profiling/>
 - Status: **verified directly on ico.org.uk** (22 November 2026); kept generic.
-- Confirmed: live ICO guidance covering UK GDPR Article 22 protections for solely automated individual decision-making with legal or similarly significant effects, including providing simple ways for individuals to request human intervention or challenge a decision.
+- Confirmed: live ICO guidance covering UK GDPR Article 22 protections for solely automated individual decision-making with legal or similarly significant effects, including providing simple ways for individuals to request human intervention or challenge a decision. *(Note: the UK statutory framework around automated decision-making is subject to updates such as the Data (Use and Access) Act 2025; always re-check live ICO guidance before relying on any check.)*
 - How the kit uses it: `AIAK-DEC-001` asks for a challenge route and suggests asking a data protection lead whether rules on solely automated decisions apply. It makes no legal claim.
 
 ### The AQuA Book
@@ -75,25 +75,26 @@ Quotations of NIST text are lightly normalised (capitalisation, dashes) and shor
 - Status: **verified directly on nist.gov** (released 26 January 2023; intended for voluntary use) and **cross-checked against NIST's official machine-readable dataset** (an export of NIST's Cybersecurity and Privacy Reference Tool) in <https://github.com/usnistgov/capordino> (`cprt_AI_100_1_0_0_07-07-2026.json`) and bibliographic record in <https://github.com/usnistgov/NIST-Tech-Pubs>.
 - How the kit uses it: function and subcategory references in the crosswalk and in rule citations. Only subcategories whose text is stored in `NIST_SUBCATEGORIES` in `src/ai_assurance_kit/sources.py` can be cited.
 
-### EU AI Act (Regulation (EU) 2024/1689)
+### EU AI Act (Regulation (EU) 2024/1689) — exploratory orientation notes only
 
 - URL: <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689> (ELI: <http://data.europa.eu/eli/reg/2024/1689/oj>)
 - Status: **official EUR-Lex legislation identifier verified** (Regulation (EU) 2024/1689 of 13 June 2024 laying down harmonised rules on artificial intelligence).
-- How the kit uses it: high-level structural orientation in [CROSSWALK.md](CROSSWALK.md) linking risk management (Article 9), data governance (Article 10), technical documentation (Article 11), record-keeping (Article 12), transparency (Articles 13 & 50), human oversight (Article 14), accuracy/robustness/cybersecurity (Article 15), and deployer obligations (Articles 26–27) to record fields. Does not provide legal classification or establish legal conformity.
+- How the kit uses it: exploratory, non-normative structural orientation notes in [CROSSWALK.md](CROSSWALK.md) only (not implemented in automated Python checks in `sources.py` or `checks/rules.py`). Notes general relationships to AI literacy (Article 4), prohibited-practices context (Article 5), risk management (Article 9), data governance (Article 10), technical documentation (Article 11), record-keeping (Article 12), deployer instructions (Article 13), human oversight (Article 14), accuracy/robustness/cybersecurity (Article 15), deployer duties (Articles 26–27), and end-user transparency (Article 50). Does not provide legal classification, establish legal conformity, or represent compliance certification.
 
-### ISO/IEC 42001:2023 (AI Management System)
+### ISO/IEC 42001:2023 (AI Management System) — exploratory orientation notes only
 
 - URL: <https://www.iso.org/standard/81230.html>
 - Status: **bibliographic catalogue entry identified**; normative standard body text is behind ISO's paywall and was not read directly in full.
-- How the kit uses it: mapped in [CROSSWALK.md](CROSSWALK.md) solely at the level of ISO's public Harmonized Structure (Clauses 4–10: Context, Leadership, Planning, Support, Operation, Performance evaluation, Improvement) and publicly documented Annex A control themes. The kit does not verify or certify management-system conformance.
+- How the kit uses it: exploratory, non-normative orientation notes in [CROSSWALK.md](CROSSWALK.md) only (not implemented in automated Python checks), mapped solely at the level of ISO's public Harmonized Structure (Clauses 4–10: Context, Leadership, Planning, Support, Operation, Performance evaluation, Improvement) and publicly listed Annex A control domains (`A.2–A.10`). The kit does not verify conformance or certify management systems.
 
 ### Published GOV.UK ATRS example records
 
 - Repository URL: <https://www.gov.uk/algorithmic-transparency-records>
-- Status: **three real records fetched directly via GOV.UK Content API** (`public_updated_at` timestamps preserved in `examples/published-atrs/`):
-  - Ofsted: *AI Writing Assistant (Social Care)* (<https://www.gov.uk/algorithmic-transparency-records/ai-writing-assistant-social-care>, updated `2026-09-24`)
-  - Cabinet Office (GCS): *Assist* (<https://www.gov.uk/algorithmic-transparency-records/cabinet-office-assist>, updated `2026-07-30`)
-  - Care Quality Commission: *Risk Categorisation* (<https://www.gov.uk/algorithmic-transparency-records/care-quality-commission-risk-categorisation>, updated `2026-03-30`)
+- Status: **three real public records published by their respective UK public bodies under the Open Government Licence v3.0 (OGL v3.0)**, fetched directly via GOV.UK Content API and independently adapted into open-source `ai-assurance-kit` schema format as reference examples (not affiliated with, endorsed by, or authored for those organisations):
+  - Ofsted: *AI Writing Assistant (Social Care)* (<https://www.gov.uk/algorithmic-transparency-records/ai-writing-assistant-social-care>, `public_updated_at`: `2026-09-24`)
+  - Cabinet Office (GCS): *Assist* (<https://www.gov.uk/algorithmic-transparency-records/cabinet-office-assist>, `public_updated_at`: `2026-07-30`)
+  - Care Quality Commission: *Risk Categorisation* (<https://www.gov.uk/algorithmic-transparency-records/care-quality-commission-risk-categorisation>, `public_updated_at`: `2026-03-30`)
+- Adaptation note: fields required by the kit's schema that GOV.UK ATRS does not publish (such as ordinal `1..5` risk scores and missing evaluation dates) are explicitly documented in each YAML header as adapter proxies rather than official GOV.UK values.
 
 ## Re-checking
 

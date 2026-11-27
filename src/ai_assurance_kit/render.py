@@ -92,9 +92,18 @@ def assess(record: AIUseRecord, policy: Policy, today: dt.date | None = None) ->
 def _person(p: Person | None, redact: bool) -> str:
     if p is None:
         return "not recorded"
+    role = p.role
+    if p.team and p.team.casefold() != p.role.casefold():
+        role = f"{p.role}, {p.team}"
     if redact or not p.name:
-        return p.role
-    return f"{p.role} ({p.name})"
+        return role
+    return f"{role} ({p.name})"
+
+
+def _is_safe_http_url(url: str | None) -> bool:
+    if not url or not url.startswith(("https://", "http://")):
+        return False
+    return not any(ch.isspace() or ch in '<>"`[](){}|\\' for ch in url)
 
 
 def _card_context(a: Assessment, policy: Policy, source: str, redact: bool) -> dict[str, Any]:
@@ -151,6 +160,7 @@ def _card_context(a: Assessment, policy: Policy, source: str, redact: bool) -> d
             for x in risks
         ],
         "cited": sorted(cited.values()),
+        "record_url_is_link": _is_safe_http_url(r.transparency.record_url),
         "source": source,
         "version": __version__,
         "disclaimer": DISCLAIMER,

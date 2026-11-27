@@ -24,6 +24,15 @@ def test_identical_records_have_no_changes(make_record: Make, policy: Policy) ->
     assert (report.material, report.other, report.needs_review) == ([], [], False)
 
 
+def test_blank_supplier_normalises_to_no_diff(make_record: Make, policy: Policy) -> None:
+    report = diff_records(
+        make_record({"system.third_party_supplier": "  "}),
+        make_record({"system.third_party_supplier": None}),
+        policy,
+    )
+    assert (report.material, report.other, report.needs_review) == ([], [], False)
+
+
 @pytest.mark.parametrize(
     ("changes", "path"),
     [
@@ -119,6 +128,39 @@ def test_material_changes(
             {"reliance.user_notice": None},
             "reliance.user_notice",
         ),
+        # Removing or downgrading an in-place control is material.
+        (
+            {
+                "controls": [
+                    {"id": "C1", "description": "Human edits.", "status": "in_place"},
+                    {"id": "C2", "description": "Second safeguard.", "status": "in_place"},
+                ]
+            },
+            {"controls": [{"id": "C1", "description": "Human edits.", "status": "in_place"}]},
+            "controls[C2]",
+        ),
+        (
+            {},
+            {"controls": [{"id": "C1", "description": "Human edits.", "status": "planned"}]},
+            "controls[C1].status",
+        ),
+        # Regressing DPIA status is material.
+        (
+            {"data.dpia": {"status": "completed", "decided_by": "DPO"}},
+            {"data.dpia": {"status": "required_in_progress", "decided_by": "DPO"}},
+            "data.dpia.status",
+        ),
+        (
+            {"data.dpia": {"status": "completed", "decided_by": "DPO"}},
+            {"data.dpia": {"status": "not_screened", "decided_by": "DPO"}},
+            "data.dpia.status",
+        ),
+        # Large first-time scale entry is material.
+        (
+            {"reliance.scale": {"users": None, "uses_per_month": 100}},
+            {"reliance.scale": {"users": 50000, "uses_per_month": 100}},
+            "reliance.scale.users",
+        ),
     ],
 )
 def test_more_material_changes(
@@ -141,6 +183,26 @@ def test_more_material_changes(
         ({}, {"system.third_party_supplier": "  "}),
         # Fewer groups relying on the outputs.
         ({"reliance.relied_on_by": ["Staff", "Managers"]}, {"reliance.relied_on_by": ["Staff"]}),
+        # DPIA progressing forward is not a regression.
+        (
+            {"data.dpia": {"status": "not_screened"}},
+            {"data.dpia": {"status": "completed", "decided_by": "DPO"}},
+        ),
+        # Removing a planned control is not material.
+        (
+            {
+                "controls": [
+                    {"id": "C1", "description": "Human edits.", "status": "in_place"},
+                    {"id": "C2", "description": "Planned.", "status": "planned"},
+                ]
+            },
+            {"controls": [{"id": "C1", "description": "Human edits.", "status": "in_place"}]},
+        ),
+        # Small first-time scale entry below threshold is not material.
+        (
+            {"reliance.scale": {"users": None, "uses_per_month": None}},
+            {"reliance.scale": {"users": 25, "uses_per_month": 400}},
+        ),
     ],
 )
 def test_more_changes_that_are_not_material(
